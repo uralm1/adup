@@ -8,10 +8,10 @@ use Carp;
 use Net::LDAP qw(LDAP_SUCCESS LDAP_NO_SUCH_OBJECT LDAP_SIZELIMIT_EXCEEDED); 
 use Net::LDAP::Util qw(canonical_dn escape_filter_value escape_dn_value);
 use Data::Dumper;
+use Mojo::File 'path';
 
 #binmode(STDOUT, ':utf8');
 
-my $remote_user = 'ural';
 my $ldapservers = ['ldap://dcsrv'];
 my $ldapuser = 'user';
 my $ldappass = 'pass';

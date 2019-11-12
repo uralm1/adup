@@ -12,7 +12,6 @@ use Data::Dumper;
 
 #binmode(STDOUT, ':utf8');
 
-my $remote_user = 'ural';
 my $ldapservers = ['ldap://dcsrv'];
 my $ldapuser = 'user';
 my $ldappass = 'pass';
