@@ -1,0 +1,121 @@
+% layout 'default', back_url => '/';
+% use MIME::Base64 qw(encode_base64url);
+% my $toast_msg = flash 'oper';
+% if ($toast_msg) {
+%   content_with done_toast => begin
+<script>$(document).ready(function(){M.toast({html:'<%= $toast_msg %>',displayLength:3000})});</script>
+%   end
+% }
+<div class="scont">
+  <h5>Загрузка фотографий сотрудников</h5>
+  <p>Найдите пользователя по Фамилии Имени Отчеству, разделитель - пробел. Возможно частичное указание.</p>
+  %= form_for photo => (method=>'GET') => begin
+  <div class="row">
+    <div class="input-field col s6">
+      <i class="material-icons prefix">account_circle</i>
+      <input id="u-search" type="text" name="s" value="<%= $search %>">
+      <label for="u-search">Введите подстроку для поиска пользователя</label>
+    </div>
+    <div class="input-field col s2">
+      <button class="btn waves-effect waves-light" type="submit">Поиск</button>
+    </div>
+  </div>
+  % end
+  % if (defined $res_tab && scalar @$res_tab > 0) {
+  Выберите один из 5 первых найденных вариантов (вводите более подробную строку поиска если пользователя нет в списке):<br>
+  %= form_for photo => (method=>'POST', enctype => 'multipart/form-data', id=>'photo-form') => begin
+  <table class="highlight">
+    <thead>
+      <tr>
+	<th style="width:5%">Выбрать</th>
+	<th style="width:20%">Ф.И.О.</th>
+	<th style="width:20%">Должность</th>
+	<th style="width:25%">Подразделение</th>
+	<th style="width:30%">Фото</th>
+      </tr>
+    </thead>
+    <tbody>
+      % for my $r (@$res_tab) {
+      %   my $dn_enc = encode_base64url($r->{dn}, '');
+      <tr>
+	<td class="vcenter">
+	  <label> 
+	    <input class="usersel" name="ug" type="radio" value="<%== $dn_enc %>"/>
+	    <span></span>
+	  </label>
+	</td>
+	% if ($r->{disabled}) {
+	  <td><span class="new badge grey" data-badge-caption="Отключен"></span>&nbsp;<%= $r->{cn} %></td>
+	% } else {
+	  <td><%= $r->{cn} %></td>
+	% }
+	<td><%= $r->{title} %></td>
+	<td><%= $r->{department} %></td>
+	<td>
+	  <%== image url_for('photoview')->query(r => $dn_enc), class=>'contact-photo' %>
+	</td>
+      </tr>
+      % }
+    </tbody>
+  </table>
+  <input type="hidden" name="s" value="<%= $search %>">
+  <p class="no-margin-bottom">Выбрав пользователя выше, загрузите файл с фотографией сотрудника 
+  и нажмите &quot;Установить&quot;. Или нажмите &quot;Камера&quot; для съёмки с камеры.<br>
+  Для удаления фотографии отметьте &quot;Удалить фотографию&quot; не выбирая файл.</p>
+  <div class="row no-margin-bottom">
+    <div class="file-field input-field col s5">
+      <div class="btn">
+	<span>Выбор</span>
+	<input type="file" name="photo" accept=".jpg,.jpeg">
+      </div>
+      <div class="file-path-wrapper">
+	<input class="file-path validate" type="text" placeholder="Выберите файл с фотографией">
+      </div>
+    </div>
+    <div class="col s7">
+      <div class="format-helper">
+        Формат: JPEG, рекомендуемый размер 128х128 пикселей, не более 16&nbsp;кб.
+      </div>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col s5">
+      <label><input type="checkbox" id="del" name="del"/><span>Удалить фотографию</span></label>
+    </div>
+  </div>
+  %= hidden_field cam => '0', id => 'cam';
+  <div class="row">
+    <div class="col s12">
+      <button class="btn-large waves-effect waves-light" type="submit">Установить</button>&nbsp;&nbsp;
+      <a class="btn-large waves-effect waves-light grey darken-3 disabled" id="cambtn"><i class="material-icons left">camera_alt</i>Камера</a>
+    </div>
+  </div>
+  % end
+  % } elsif (defined $res_tab) {
+  <p><b>Никого не найдено, измените строку поиска.</b></p><br>
+  % }
+</div>
+
+% content_for script0 => begin
+<script>
+$(document).ready(function(){
+  var select_user = function(s){
+    s.parent().parent().find('input.usersel').prop('checked', true);
+  };
+
+  var change_file = function(s){
+    $('#del').prop('checked', false).prop('disabled', !!s.val());
+  };
+
+  $('.contact-photo').click(function(){select_user($(this))});
+  $('input.file-path').change(function(){change_file($(this))});
+
+  if ('mediaDevices' in navigator) {
+    $('#cambtn').prop('disabled', false).removeClass('disabled');
+  }
+
+  $('#cambtn').click(function(){$('#cam').val(1);$('#photo-form').submit()});
+});
+</script>
+% end
+

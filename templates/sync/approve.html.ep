@@ -1,0 +1,120 @@
+% layout 'default', back_url => '/sync';
+% use Mojo::Util qw(xml_escape);
+<div class="scont">
+  <h5>Просмотр и утверждение изменений (найдено <%== $changes_found %> из всего <%== $changes_alltotal %> изменений)</h5>
+  <div class="row">
+    %= form_for syncapprove => (method=>'GET') => begin
+    <div class="input-field col s4">
+      <i class="material-icons prefix">search</i>
+      <input id="ch-search" type="text" name="s" value="<%= $search %>">
+      <label for="ch-search">Введите подстроку для поиска по объекту</label>
+    </div>
+    <div class="input-field col s4">
+      <select multiple name="t">
+	% my $opt_ch = sub { (scalar grep {$_ eq $_[0]} @$search_chtypes) ? ' selected' : ''};
+	<option value="" disabled>Отображать все</option>
+	<option value="99"<%== $opt_ch->('99') %>>Ошибки</option>
+	<option value="20"<%== $opt_ch->('20') %>>Создание подразделений</option>
+	<option value="22"<%== $opt_ch->('22') %>>Изменение подразделений</option>
+	<option value="10"<%== $opt_ch->('10') %>>Создание групп почтового справочника</option>
+	<option value="12"<%== $opt_ch->('12') %>>Изменение групп почтового справочника</option>
+	<option value="2"<%== $opt_ch->('2') %>>Создание учётных записей</option>
+	<option value="1"<%== $opt_ch->('1') %>>Изменение аттрибутов учётных записей</option>
+	<option value="13"<%== $opt_ch->('13') %>>Удаление пользователей из групп почтового справочника</option>
+	<option value="5"<%== $opt_ch->('5') %>>Перемещение учётных записей</option>
+	<option value="8"<%== $opt_ch->('8') %>>Блокирование учётных записей</option>
+	<option value="11"<%== $opt_ch->('11') %>>Удаление групп почтового справочника</option>
+	<option value="21"<%== $opt_ch->('21') %>>Удаление подразделений</option>
+      </select>
+      <label>и/или выберите типы изменений</label>
+    </div>
+    <div class="input-field col s2">
+      <button class="btn waves-effect waves-light" type="submit">Поиск</button>
+    </div>
+    % end
+  </div>
+  % if ($changes_found > 0) {
+  <table class="highlight">
+    <thead>
+      <tr>
+	<th style="width:10%">Утверждение</th>
+	<th style="width:5%">№</th>
+	<th style="width:10%">Изменение</th>
+	<th style="width:10%">Объект</th>
+	<th style="width:65%">Подробно об изменении</th>
+      </tr>
+    </thead>
+    <tbody>
+      % my $i = ($changes_active_page - 1) * $changes_on_page;
+      % for my $c (@$changes_rec) {
+      <tr>
+	%# $c->approve(author=>'superuser@zzz');
+	<td class="vcenter">
+	  <label> 
+	    % my ($checked, $appr_info);
+	    % if (my $ainfo = $c->approved) {
+	    %   $checked = ' checked="checked"';
+	    %   $appr_info = 'Утверждено:<br>'.xml_escape(oprs $ainfo->{author}).'<br>'.xml_escape($ainfo->{date});
+	    % } else {
+	    %   $checked = '';
+	    %   $appr_info = '';
+	    % }
+	    <input type="checkbox" class="aprv filled-in" id="aprv<%== $i %>" value="<%== $c->{id} %>"<%== $checked %>/>
+	    <span><div class="approve-userblock"><%== $appr_info %></div></span>
+	  </label>
+	</td>
+	<td><%== ++$i %></td>
+	<td><%= $c->type_human %></td>
+	<td><%= $c->name %></td>
+	<td>
+	  <%== $c->info_human %>
+	  % my $cinfo = $c->author;
+	  % my $created_info = 'Изменение создано: '.xml_escape(oprs $cinfo->{author}).' '.xml_escape($cinfo->{date});
+	  <div class="approve-userblock"><%== $created_info %></div>
+	</td>
+      </tr>
+      % }
+    </tbody>
+  </table>
+  %= m_page_nav($changes_active_page, $changes_num_pages, {round=>3, outer=>1, start=>1, class=>'center-align', param=>'p', query=>''});
+  % } elsif ($changes_alltotal > 0) {
+  <p>Объектов не найдено, измените параметры поиска для просмотра изменений.</p>
+  % } else {
+  <p>Объектов не найдено, изменения отсутствуют.</p>
+  % }
+    <br>
+    %= form_for syncmerge => (method => 'POST') => begin
+    % if ($changes_alltotal > 0) {
+    <button class="btn waves-effect waves-light" type="submit"><i class="material-icons left">warning</i>Запуск применения изменений</button>
+    &nbsp;
+    % }
+    <%= link_to 'sync' => (class=>'waves-effect waves-light btn grey lighten-1') => begin %>Возврат к синхронизации<% end %>
+    % end
+    <br>
+</div>
+
+% content_for script0 => begin
+<script>
+$(document).ready(function(){
+  $('select').formSelect();
+
+  var process_aprv = function(s,url){
+    var p=$.post(url,{id:s.get(0).id,v:s.val()});
+    p.done(function(d){
+      s.next().children('.approve-userblock').html(d.msg);
+      if('v' in d){
+        s.prop('checked', d.v);
+      };
+    });
+    p.fail(function(o,t){
+      s.next().children('.approve-userblock').html('Ошибка: '+o.responseJSON.msg);
+      if('v' in o.responseJSON){s.prop('checked', o.responseJSON.v)};
+    });
+  };
+
+  $('input.aprv').change(function(){process_aprv($(this), '/sync/approve/aprv1')});
+});
+</script>
+% end
+
+

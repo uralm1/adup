@@ -1,0 +1,194 @@
+% layout 'default', back_url => '/';
+% use MIME::Base64 qw(encode_base64url);
+% my $toast_msg = flash 'oper';
+% if ($toast_msg) {
+%   content_with done_toast => begin
+<script>$(document).ready(function(){M.toast({html:'<%= $toast_msg %>',displayLength:3000})});</script>
+%   end
+% }
+<div class="scont">
+  <h5>Ввод информации по стационарным телефонам и номерам комнат</h5>
+  <p>Найдите пользователя по Фамилии Имени Отчеству, разделитель - пробел. Возможно частичное указание.</p>
+  %= form_for room => (method=>'GET') => begin
+  <div class="row">
+    <div class="input-field col s6">
+      <i class="material-icons prefix">account_circle</i>
+      <input id="u-search" type="text" name="s" value="<%= $search %>">
+      <label for="u-search">Введите подстроку для поиска пользователя</label>
+    </div>
+    <div class="input-field col s2">
+      <button class="btn waves-effect waves-light" type="submit">Поиск</button>
+    </div>
+  </div>
+  % end
+  % if (defined $res_tab && scalar @$res_tab > 0) {
+  Выберите один из 5 первых найденных вариантов (вводите более подробную строку поиска если пользователя нет в списке):<br>
+  %= form_for room => (method=>'POST') => begin
+  <table class="highlight">
+    <thead>
+      <tr>
+	<th style="width:5%">Выбрать</th>
+	<th style="width:20%">Ф.И.О.</th>
+	<th style="width:15%">Должность</th>
+	<th style="width:25%">Подразделение</th>
+	<th style="width:5%">Комната</th>
+	<th style="width:10%">Внутренние телефоны</th>
+	<th style="width:10%">Городские телефоны</th>
+	<th style="width:5%">Мн.кан.</th>
+	<th style="width:5%">Факс</th>
+      </tr>
+    </thead>
+    <tbody>
+      % for my $r (@$res_tab) {
+      <tr>
+	<td class="vcenter">
+	  <label> 
+	    <input class="usersel" name="ug" type="radio" value="<%== encode_base64url($r->{dn}, '') %>"/>
+	    <span></span>
+	  </label>
+	</td>
+	% if ($r->{disabled}) {
+	  <td><span class="new badge grey" data-badge-caption="Отключен"></span>&nbsp;<%= $r->{cn} %></td>
+	% } else {
+	  <td><%= $r->{cn} %></td>
+	% }
+	<td><%= $r->{title} %></td>
+	<td><%= $r->{department} %></td>
+	<td class="room"><%= $r->{room} %></td>
+	<td class="intphones"><%= $r->{intphones} %></td>
+	<td class="extphones"><%= $r->{extphones} %></td>
+	<td class="pagers"><%= $r->{pagers} %></td>
+	<td class="faxes"><%= $r->{faxes} %></td>
+      </tr>
+      % }
+    </tbody>
+  </table>
+  <input type="hidden" name="s" value="<%= $search %>">
+  <p class="no-margin-bottom">Выбрав пользователя выше, заполните поля &quot;Комната&quot; и 
+  &quot;Телефоны&quot; и нажмите &quot;Установить&quot;.
+  Для удаления значения очистите требуемое поле.</p>
+  <div class="row no-margin-bottom">
+    <div class="input-field col s3">
+      <i class="material-icons prefix">room</i>
+      <input id="u-room" type="text" name="room" value="">
+      <label for="u-room">Комната</label>
+    </div>
+    <div class="col s6 offset-s3">
+      <div class="format-helper">
+        Формат: NNN (опционально)
+      </div>
+    </div>
+  </div>
+  <div class="row no-margin-bottom">
+    <div class="input-field col s2">
+      <i class="material-icons prefix">phone</i>
+      <input id="u-phonevn1" type="text" name="phonevn1" value="">
+      <label for="u-phonevn1">Внутренний 1</label>
+    </div>
+    <div class="input-field col s2">
+      <input id="u-phonevn2" type="text" name="phonevn2" value="">
+      <label for="u-phonevn2">Внутренний 2</label>
+    </div>
+    <div class="input-field col s2">
+      <input id="u-phonevn3" type="text" name="phonevn3" value="">
+      <label for="u-phonevn3">Внутренний 3</label>
+    </div>
+    <div class="col s6">
+      <div class="format-helper">
+        Формат: NNNN
+      </div>
+    </div>
+  </div>
+  <div class="row no-margin-bottom">
+    <div class="input-field col s2">
+      <i class="material-icons prefix">domain</i>
+      <input id="u-phonegor1" type="text" name="phonegor1" value="">
+      <label for="u-phonegor1">Городской 1</label>
+    </div>
+    <div class="input-field col s2">
+      <input id="u-phonegor2" type="text" name="phonegor2" value="">
+      <label for="u-phonegor2">Городской 2</label>
+    </div>
+    <div class="input-field col s2">
+      <input id="u-phonegor3" type="text" name="phonegor3" value="">
+      <label for="u-phonegor3">Городской 3</label>
+    </div>
+    <div class="col s6">
+      <div class="format-helper">
+        Формат: NNNNNNN или NNN-NN-NN
+      </div>
+    </div>
+  </div>
+  <div class="row no-margin-bottom">
+    <div class="input-field col s2">
+      <i class="material-icons prefix">headset_mic</i>
+      <input id="u-mkan1" type="text" name="mkan1" value="">
+      <label for="u-mkan1">Мн.канальный 1</label>
+    </div>
+    <div class="input-field col s2">
+      <input id="u-mkan2" type="text" name="mkan2" value="">
+      <label for="u-mkan2">Мн.канальный 2</label>
+    </div>
+    <div class="col s6 offset-s2">
+      <div class="format-helper">
+        Формат: NNNNNNN или NNN-NN-NN
+      </div>
+    </div>
+  </div>
+  <div class="row no-margin-bottom">
+    <div class="input-field col s2">
+      <i class="material-icons prefix">local_printshop</i>
+      <input id="u-fax1" type="text" name="fax1" value="">
+      <label for="u-fax1">Факс 1</label>
+    </div>
+    <div class="input-field col s2">
+      <input id="u-fax2" type="text" name="fax2" value="">
+      <label for="u-fax2">Факс 2</label>
+    </div>
+    <div class="col s6 offset-s2">
+      <div class="format-helper">
+        Формат: NNNNNNN или NNN-NN-NN
+      </div>
+    </div>
+  </div>
+  <div class="row">
+    <div class="input-field col s2">
+      <button class="btn-large waves-effect waves-light" type="submit">Установить</button>
+    </div>
+  </div>
+  % end
+  % } elsif (defined $res_tab) {
+  <p><b>Никого не найдено, измените строку поиска.</b></p><br>
+  % }
+</div>
+
+% content_for script0 => begin
+<script>
+$(document).ready(function(){
+  var fill_form = function(s){
+    var td = s.parentsUntil('tr', 'td');
+    var room = td.nextAll('.room').text();
+    var intphones = td.nextAll('.intphones').text().split(',');
+    var extphones = td.nextAll('.extphones').text().split(',');
+    var pagers = td.nextAll('.pagers').text().split(',');
+    var faxes = td.nextAll('.faxes').text().split(',');
+    $('#u-room').val((room)?room.trim():'');
+    $('#u-phonevn1').val((intphones[0])?intphones[0].trim():'');
+    $('#u-phonevn2').val((intphones[1])?intphones[1].trim():'');
+    $('#u-phonevn3').val((intphones[2])?intphones[2].trim():'');
+    $('#u-phonegor1').val((extphones[0])?extphones[0].trim():'');
+    $('#u-phonegor2').val((extphones[1])?extphones[1].trim():'');
+    $('#u-phonegor3').val((extphones[2])?extphones[2].trim():'');
+    $('#u-mkan1').val((pagers[0])?pagers[0].trim():'');
+    $('#u-mkan2').val((pagers[1])?pagers[1].trim():'');
+    $('#u-fax1').val((faxes[0])?faxes[0].trim():'');
+    $('#u-fax2').val((faxes[1])?faxes[1].trim():'');
+    M.updateTextFields();
+  };
+
+  $('input.usersel').change(function(){fill_form($(this))});
+});
+</script>
+% end
+
+

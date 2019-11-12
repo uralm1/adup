@@ -1,0 +1,17 @@
+[Unit]
+Description=ADUP hypnotoad
+After=network.target
+
+[Service]
+Type=forking
+User=adup
+Group=adup
+PIDFile=/opt/adup/run/hypnotoad.pid
+ExecStartPre=/opt/adup/script/check_db_hosts
+ExecStart=/usr/local/bin/hypnotoad /opt/adup/script/adup
+#ExecStop=/usr/local/bin/hypnotoad -s /opt/adup/script/adup
+ExecReload=/usr/local/bin/hypnotoad /opt/adup/script/adup
+KillMode=process
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,8 @@
+#!/bin/bash
+
+APP_DIR='/opt/adup'
+#APP_DIR='/home/sv/src/adup'
+
+cd $APP_DIR
+export MOJO_MODE=production
+script/adup smbload >> $APP_DIR/log/smbload.log 2>&1

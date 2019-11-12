@@ -1,0 +1,49 @@
+% layout 'default';
+<div class="scont">
+  <h5>Информация</h5>
+  <p>Для обеспечения актуальности информации в глобальном каталоге предприятия с целью
+выполнения положения "Об обеспечении информационной безопасности", принято решение
+о регулярном обновлении глобального каталога из ИС "Галактика".</p>
+  <p>Основные операции по обновлению глобального каталога можно выполнить на данной странице.</p>
+  <div class="row">
+    <div class="col s12">
+      <%= link_to 'upload' => (class=>'root-link') => begin %>Загрузка шаблона Persons из ИС "Галактика"<% end %>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col s12">
+      <%= link_to 'sync' => (class=>'root-link') => begin %>Управление синхронизацией глобального каталога<% end %>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col s12">
+      <%= link_to 'room' => (class=>'root-link') => begin %><i class="material-icons">phone</i>&nbsp;Ввод стационарных телефонов и номеров комнат<% end %>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col s12">
+      <%= link_to 'sot' => (class=>'root-link') => begin %><i class="material-icons">smartphone</i>&nbsp;Ввод сотовых телефонов<% end %>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col s12">
+      <%= link_to 'email' => (class=>'root-link') => begin %><i class="material-icons">email</i>&nbsp;Ввод email-ов сотрудников<% end %>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col s12">
+      <%= link_to 'photo' => (class=>'root-link') => begin %><i class="material-icons">photo_camera</i>&nbsp;Загрузка фотографий сотрудников<% end %>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col s12">
+      <%= link_to 'comp' => (class=>'root-link') => begin %><i class="material-icons">computer</i>&nbsp;Узнать имя компьютера сотрудника<% end %>
+    </div>
+  </div>
+  <h6>Последняя успешная загрузка</h6>
+  <p class="small-log"><%= $last_upload %></p>
+  <h6>Последнее применение изменений</h6>
+  <p class="small-log"><%== display_log_hack $last_merge %></p>
+</div>
+
+

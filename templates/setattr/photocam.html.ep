@@ -1,0 +1,68 @@
+% layout 'default', back_url => $back_url;
+% use MIME::Base64 qw(encode_base64url);
+<div class="scont" id="maindiv">
+  <h5>Фотографируется: <b><%= $name %></b>.</h5>
+  <p><span class="red lighten-1 white-text" style="padding:2px 3px;">Разрешите использование камеры чтобы продолжить!</span></p>
+
+  <div class="row">
+    <div class="col s8">
+      <video class="responsive-video cam-block" id="player" width="640" height="480" autoplay></video>
+    </div>
+    <div class="col s3">
+      <p><b>Фотография:</b></p>
+      <canvas class="cam-block" id="canvas" width="128" height="128"></canvas>
+      <p><button class="btn-large waves-effect waves-light" id="capture"><i class="material-icons left">camera</i>Снимок</button></p>
+      <p>Расположите лицо в центре изображения и нажмите <b>&quot;Снимок&quot;</b>.<br>
+      Если кадр неудачный, повторите заново.<br>
+      После съёмки нажмите <b>&quot;Установить&quot;</b>.</p>
+    </div>
+  </div>
+  %= form_for photocam => (method=>'POST') => begin
+  %== hidden_field seldn=>encode_base64url($seldn, '');
+  %== hidden_field pic=>'', id => 'pic';
+  %== hidden_field backurl=>$back_url;
+  <div class="row">
+    <div class="col s12">
+      <button class="btn-large waves-effect waves-light disabled" id="submitbtn" type="submit">Установить</button>&nbsp;&nbsp;
+      <a class="btn-large waves-effect waves-light grey lighten-1" id="cancelbtn">Отменить</a>
+    </div>
+  </div>
+  % end
+</div>
+
+% content_for script0 => begin
+<script>
+if (!('mediaDevices' in navigator)) {
+  $('#maindiv').html('<p>Работа с видеокамерой не поддерживается в Вашем броузере.</p>');
+}
+
+const player = document.getElementById('player');
+
+navigator.mediaDevices.getUserMedia({ video: true })
+    .then((stream) => {
+      player.srcObject = stream;
+    });
+
+$(document).ready(function(){
+  const canvas = document.getElementById('canvas');
+  const ctx = canvas.getContext('2d');
+
+  $('#capture').click(function(){
+    ctx.drawImage(player,
+      80, 0, 480, 480,
+      0, 0, canvas.width, canvas.height
+    );
+    var d = canvas.toDataURL('image/jpeg',0.7);
+    //console.log(d);
+    $('#pic').val(d);
+
+    $('#submitbtn').prop('disabled', false).removeClass('disabled');
+  });
+  
+  $('#cancelbtn').click(function(){
+    location.replace('<%== $back_url %>');
+  });
+});
+</script>
+% end
+

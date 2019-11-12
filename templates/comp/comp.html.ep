@@ -1,0 +1,53 @@
+% layout 'default', back_url => '/';
+<div class="scont">
+  <h5>Определение имени компьютера и времени последнего входа сотрудника</h5>
+  <p>В рамках технических ограничений, возможно определить только <b>имя компьютера и время 
+  последнего события входа или выхода</b> сотрудника в сеть/из сети.</p>
+  <p>Найдите пользователя по Фамилии Имени Отчеству, разделитель - пробел, или логину. Возможно частичное указание.</p>
+  %= form_for comp => (method=>'GET') => begin
+  <div class="row">
+    <div class="input-field col s6">
+      <i class="material-icons prefix">account_circle</i>
+      <input id="u-search" type="text" name="s" value="<%= $search %>">
+      <label for="u-search">Введите подстроку для поиска пользователя</label>
+    </div>
+    <div class="input-field col s2">
+      <button class="btn waves-effect waves-light" type="submit">Поиск</button>
+    </div>
+  </div>
+  % end
+  % if (defined $res_tab && scalar @$res_tab > 0) {
+  Отображены 5 первых найденных вариантов (вводите более подробную строку поиска если пользователя нет в списке):<br>
+  <table class="highlight">
+    <thead>
+      <tr>
+	<th style="width:15%">Ф.И.О.</th>
+	<th style="width:15%">Должность</th>
+	<th style="width:30%">Подразделение (полностью)</th>
+	<th style="width:10%">Логин</th>
+	<th style="width:30%">Имя компьютера и последнее событие</th>
+      </tr>
+    </thead>
+    <tbody>
+      % for my $r (@$res_tab) {
+      <tr>
+	% if ($r->{disabled}) {
+	  <td><span class="new badge grey" data-badge-caption="Отключен"></span>&nbsp;<%= $r->{cn} %></td>
+	% } else {
+	  <td><%= $r->{cn} %></td>
+	% }
+	<td><%= $r->{title} %></td>
+	<td><%= $r->{dept} %></td>
+	<td><%= $r->{login} %></td>
+	<td><%= $r->{comp} %></td>
+      </tr>
+      % }
+    </tbody>
+  </table>
+  <br><br>
+  % } elsif (defined $res_tab) {
+  <p><b>Никого не найдено, измените строку поиска.</b></p><br>
+  % }
+</div>
+
+

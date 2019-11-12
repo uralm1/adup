@@ -1,0 +1,100 @@
+% layout 'default', back_url => '/';
+% my $toast_msg = flash 'oper';
+% if ($toast_msg) {
+%   content_with done_toast => begin
+<script>$(document).ready(function(){M.toast({html:'<%= $toast_msg %>',displayLength:3000})});</script>
+%   end
+% }
+<div class="scont">
+  <h5>Загрузка шаблона Persons из ИС "Галактика"</h5>
+% unless (defined $upload_task_id) {
+<p>Укажите местоположение DBF файла (максимум до 16МБ) и нажмите "Загрузить".<br>
+Проверка на соответствие формату будет произведена автоматически.</p>
+% } elsif ($upload_task_id == 0) {
+<p><b>Обработка файла завершена. Благодарим за работу.</b><br>
+Повторить загрузку можно ниже.</p>
+% }
+% if (!defined $upload_task_id || $upload_task_id == 0) {
+  <div class="row">
+    <div class="col s8">
+      %= form_for upload => (method => 'POST', enctype => 'multipart/form-data') => begin
+	<div class="file-field input-field">
+	  <div class="btn">
+	    <span>Выбор</span>
+	    <input type="file" name="personsdb">
+	  </div>
+	  <div class="file-path-wrapper">
+	    <input class="file-path validate" type="text" placeholder="Выберите файл выгрузки">
+	  </div>
+	</div>
+	<button class="btn waves-effect waves-light" type="submit"><i class="material-icons left">get_app</i>Загрузить</button>
+      % end
+    </div>
+  </div>
+% } else {
+  <p>Выполняется проверка и обработка файла выгрузки (3-4 минуты). Ожидайте завершения.</p>
+  <div class="row">
+    <div class="col s7">
+      <div class="progress">
+	<div id="progress" class="indeterminate"></div>
+      </div>
+    </div>
+    <div class="col s5">
+      <div class="info-progress" id="info">Запускается задание постобработки после загрузки</div>
+    </div>
+  </div>
+% content_with task_update => begin
+<script>
+function cu(){
+  console.log("check!");
+  $.post('/upload/cu', function(d){
+    console.log(d.utid);
+    if(d.utid==0){location.reload()}
+    if('progress' in d){
+      console.log(d.progress+'%');
+      if($('#progress').hasClass('indeterminate')){
+        $('#progress').removeClass('indeterminate').addClass('determinate');
+      }
+      $('#progress').css('width', d.progress+'%')
+    }
+    if('info' in d){
+      $('#info').html(d.info)
+    }
+  });
+}
+setInterval(cu,2000);
+</script>
+% end
+% }
+  <h6 id="log">Перечень последних загрузок (всего: <%= $log_lines_total %>)</h6>
+  <table class="striped small-log">
+    <thead>
+      <tr>
+	<th>Время, дата</th>
+	<th>Загрузил(а)</th>
+	<th>Информация</th>
+	<th>Результат</th>
+      </tr>
+    </thead>
+    <tbody>
+      % my $cnt = 0;
+      % my $ffd;
+      % while (my $next = $log_rec->hash) {
+      %   $ffd = $next->{fdate} unless $ffd;
+      <tr class="<%== ($log_active_page == 1 && $next->{fdate} eq $ffd)?'deep-purple-text text-darken-3':''%>">
+	<td><%= $next->{fdate}||'н/д' %></td>
+	<td><%= oprs $next->{login} %></td>
+	<td><%= $next->{info} %></td>
+	<td><%= ($next->{state} eq '0') ? 'Успешно' : 'Ошибка' %></td>
+      </tr>
+      % $cnt++;
+      % }
+      % unless ($cnt) {
+      <tr><td colspan="4">Перечень загрузок пуст</td></tr>
+      % }
+    </tbody>
+  </table>
+  %= m_page_nav($log_active_page, $log_num_pages, {round=>3, outer=>1, start=>1, class=>'center-align', param=>'p', query=>'#log'});
+</div>
+
+

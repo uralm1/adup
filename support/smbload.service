@@ -1,0 +1,8 @@
+[Unit]
+Description=ADUP SMB loader service
+
+[Service]
+Type=simple
+User=adup
+Group=adup
+ExecStart=/opt/adup/script/smbload

@@ -1,0 +1,114 @@
+html {
+  height:100%;
+}
+
+/*body {
+  background-color:#f4f4f4;
+  font-family:Roboto,Oxygen-Sans,Ubuntu,Cantarell,"Helvetica Neue",sans-serif;
+  font-size:14px;
+  min-height:100%;
+}*/
+
+.scont {
+  margin:0 auto;
+  width:100%;
+  padding-left:20px;
+  padding-right:20px;
+}
+
+.root-link {
+  display:-webkit-box;
+  display:-webkit-flex;
+  display:-ms-flexbox;
+  display:flex;
+  -webkit-box-align:center;
+  -webkit-align-items:center;
+  -ms-flex-align:center;
+  align-items:center;
+}
+
+.file-field .btn {
+  background-color:#607d8b;
+}
+
+.vcenter {
+  vertical-align:middle !important;
+}
+
+.approve-userblock {
+  font-size:12px;
+  line-height:16px;
+  color:#9e9e9e;
+}
+
+.info-attr {
+  color:#136dbb;
+}
+
+.info-error {
+  color:#f44336;
+  font-weight:bold;
+}
+
+.info-warn {
+  color:#600700;
+  font-size:12px;
+}
+
+.info-note {
+  color:#136dbb;
+  font-size:12px;
+}
+
+.info-progress {
+  color:#a0a0a0;
+  font-size:12px;
+}
+
+.no-margin-bottom {
+  margin-bottom:0;
+}
+
+.footer-copyright a {
+  color:inherit;
+}
+
+div.about-hist {
+  height:415px;
+  overflow-y:scroll;
+  border:1px solid #d0d0d0;
+  padding-left:10px;
+  padding-right:10px;
+}
+
+.format-helper {
+  padding:24px;
+  margin-top:.5rem;
+  color:#808080;
+}
+
+nav .brand-logo {
+  white-space:nowrap;
+}
+
+.small-log {
+  font-size:13px;
+}
+
+.contact-photo {
+  border:#d4d4d4;
+  border-style:solid;
+  border-width:1px;
+  padding:1px;
+  max-width:128px;
+  max-height:128px;
+}
+
+.cam-block {
+  border:#d4d4d4;
+  border-style:solid;
+  border-width:1px;
+  padding:1px;
+}
+
+

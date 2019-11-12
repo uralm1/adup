@@ -1,0 +1,104 @@
+% layout 'default', back_url => '/';
+% use MIME::Base64 qw(encode_base64url);
+% my $toast_msg = flash 'oper';
+% if ($toast_msg) {
+%   content_with done_toast => begin
+<script>$(document).ready(function(){M.toast({html:'<%= $toast_msg %>',displayLength:3000})});</script>
+%   end
+% }
+<div class="scont">
+  <h5>Ввод информации по сотовым телефонам</h5>
+  <p>Найдите пользователя по Фамилии Имени Отчеству, разделитель - пробел. Возможно частичное указание.</p>
+  %= form_for sot => (method=>'GET') => begin
+  <div class="row">
+    <div class="input-field col s6">
+      <i class="material-icons prefix">account_circle</i>
+      <input id="u-search" type="text" name="s" value="<%= $search %>">
+      <label for="u-search">Введите подстроку для поиска пользователя</label>
+    </div>
+    <div class="input-field col s2">
+      <button class="btn waves-effect waves-light" type="submit">Поиск</button>
+    </div>
+  </div>
+  % end
+  % if (defined $res_tab && scalar @$res_tab > 0) {
+  Выберите один из 5 первых найденных вариантов (вводите более подробную строку поиска если пользователя нет в списке):<br>
+  %= form_for sot => (method=>'POST') => begin
+  <table class="highlight">
+    <thead>
+      <tr>
+	<th style="width:5%">Выбрать</th>
+	<th style="width:20%">Ф.И.О.</th>
+	<th style="width:25%">Должность</th>
+	<th style="width:30%">Подразделение</th>
+	<th style="width:20%">Сотовые</th>
+      </tr>
+    </thead>
+    <tbody>
+      % for my $r (@$res_tab) {
+      <tr>
+	<td class="vcenter">
+	  <label> 
+	    <input class="usersel" name="ug" type="radio" value="<%== encode_base64url($r->{dn}, '') %>"/>
+	    <span></span>
+	  </label>
+	</td>
+	% if ($r->{disabled}) {
+	  <td><span class="new badge grey" data-badge-caption="Отключен"></span>&nbsp;<%= $r->{cn} %></td>
+	% } else {
+	  <td><%= $r->{cn} %></td>
+	% }
+	<td><%= $r->{title} %></td>
+	<td><%= $r->{department} %></td>
+	<td class="mobiles"><%= $r->{mobiles} %></td>
+      </tr>
+      % }
+    </tbody>
+  </table>
+  <input type="hidden" name="s" value="<%= $search %>">
+  <p class="no-margin-bottom">Выбрав пользователя выше, заполните поля &quot;Сотовый телефон&quot; 
+  и нажмите &quot;Установить&quot;.
+  Для удаления значения очистите поле.</p>
+  <div class="row no-margin-bottom">
+    <div class="input-field col s3">
+      <i class="material-icons prefix">smartphone</i>
+      <input id="u-mobile1" type="text" name="mobile1" value="">
+      <label for="u-mobile1">Сотовый телефон 1</label>
+    </div>
+    <div class="input-field col s3">
+      <input id="u-mobile2" type="text" name="mobile2" value="">
+      <label for="u-mobile2">Сотовый телефон 2</label>
+    </div>
+    <div class="col s6">
+      <div class="format-helper">
+        Формат: NNNN или +N(NNN)NNNNNNN
+      </div>
+    </div>
+  </div>
+  <div class="row">
+    <div class="input-field col s2">
+      <button class="btn-large waves-effect waves-light" type="submit">Установить</button>
+    </div>
+  </div>
+  % end
+  % } elsif (defined $res_tab) {
+  <p><b>Никого не найдено, измените строку поиска.</b></p><br>
+  % }
+</div>
+
+% content_for script0 => begin
+<script>
+$(document).ready(function(){
+  var fill_form = function(s){
+    var d = s.parentsUntil('tr', 'td').nextAll('.mobiles').text().split(',');
+    $('#u-mobile1').val((d[0])?d[0].trim():'');
+    $('#u-mobile2').val((d[1])?d[1].trim():'');
+    M.updateTextFields();
+  };
+
+  $('input.usersel').change(function(){fill_form($(this))});
+});
+</script>
+% end
+
+

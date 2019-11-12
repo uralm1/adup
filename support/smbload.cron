@@ -1,0 +1,2 @@
+# load from smb share
+3 21 * * * adup /opt/adup/script/smbload

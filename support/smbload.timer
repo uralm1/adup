@@ -1,0 +1,12 @@
+[Unit]
+Description=ADUP SMB loader timer
+
+[Timer]
+#OnBootSec=13min
+#OnUnitActiveSec=1h
+OnCalendar=*-*-* 21:03:00
+RandomizedDelaySec=3min
+Unit=smbload.service
+
+[Install]
+WantedBy=timers.target

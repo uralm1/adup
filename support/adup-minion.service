@@ -1,0 +1,16 @@
+[Unit]
+Description=ADUP minion worker
+After=network.target
+
+[Service]
+Type=simple
+User=adup
+Group=adup
+ExecStartPre=/opt/adup/script/check_db_hosts
+ExecStart=/opt/adup/script/adup minion worker -m production
+KillMode=process
+Restart=on-failure
+RestartSec=10s
+
+[Install]
+WantedBy=multi-user.target

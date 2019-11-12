@@ -1,0 +1,155 @@
+% layout 'default', back_url => '/';
+% my $toast_msg = flash 'oper';
+% if ($toast_msg) {
+%   content_with done_toast => begin
+<script>$(document).ready(function(){M.toast({html:'<%= $toast_msg %>',displayLength:3000})});</script>
+%   end
+% }
+<div class="scont">
+<h5>Управление синхронизацией глобального каталога</h5>
+
+% if ((!defined $sync_task_id || $sync_task_id == 0) && (!defined $merge_task_id || $merge_task_id == 0)) {
+  % unless (defined $sync_task_id) {
+  <h6>Расчёт изменений</h6>
+  <p>Запустить процедуру расчёта изменений между базой кадрового отдела (последняя загрузка была: <b><%= $last_upload %></b>) и<br>
+  глобальным каталогом можно нажатием на кнопку ниже.</p>
+  % } elsif ($sync_task_id == 0) {
+  <h6>Расчёт изменений</h6>
+  <p><b>Расчёт изменений завершен.</b><br>
+  Далее Вы можете утвердить изменения и провести слияние утвержденных изменений.<br>
+  Повторить расчёт (по загрузке от: <b><%= $last_upload %></b>) можно нажатием на кнопку ниже.
+  </p>
+  % }
+
+  <div class="row">
+    <div class="col s8">
+      %= form_for sync => (method => 'POST') => begin
+      <button class="btn waves-effect waves-light" type="submit"><i class="material-icons left">looks_one</i>Запуск расчёта изменений</button>
+      % end
+    </div>
+  </div>
+  <h6>Просмотр и утверждение изменений.</h6>
+  <p>Чтобы перейти к утверждению изменений, нажмите на кнопку.</p>
+  <div class="row">
+    <div class="col s8">
+      <%= link_to 'syncapprove' => (class=>'btn waves-effect waves-light') => begin %><i class="material-icons left">looks_two</i>Утверждение изменений<% end %>
+    </div>
+  </div>
+  <h6>Применение изменений.</h6>
+  % unless (defined $merge_task_id) {
+  <p>Чтобы применить утверждённые изменения в глобальном каталоге, нажмите на кнопку.</p>
+  % } elsif ($merge_task_id == 0) {
+  <p><b>Применение изменений завершено.</b><br>
+  Повторить применение изменений можно нажатием на кнопку ниже.
+  </p>
+  % }
+  <div class="row">
+    <div class="col s8">
+      %= form_for syncmerge => (method => 'POST') => begin
+      <button class="btn waves-effect waves-light" type="submit"><i class="material-icons left">looks_3</i>Запуск применения изменений</button>
+      % end
+    </div>
+  </div>
+
+% } elsif (defined $sync_task_id && $sync_task_id > 0) {
+  <p>Выполняется расчёт изменений глобального каталога (около 5 минут). Ожидайте завершения.</p>
+  <div class="row">
+    <div class="col s7">
+      <div class="progress">
+	<div id="progress" class="indeterminate"></div>
+      </div>
+    </div>
+    <div class="col s5">
+      <div class="info-progress" id="info">Выполняется синхронизация</div>
+    </div>
+  </div>
+% content_with task_update => begin
+<script>
+function cu(){
+  console.log("check sync!");
+  $.post('/sync/cu', function(d){
+    console.log(d.stid);
+    if(d.stid==0){location.reload()}
+    if('progress' in d){
+      console.log(d.progress+'%');
+      if($('#progress').hasClass('indeterminate')){
+        $('#progress').removeClass('indeterminate').addClass('determinate');
+      }
+      $('#progress').css('width', d.progress+'%')
+    }
+    if('info' in d){
+      $('#info').html(d.info)
+    }
+  });
+}
+setInterval(cu,2000);
+</script>
+% end
+
+% } elsif (defined $merge_task_id && $merge_task_id > 0) {
+  <p>Выполняется применение утверждённых изменений глобального каталога (около 5 минут). Ожидайте завершения.</p>
+  <div class="row">
+    <div class="col s7">
+      <div class="progress">
+	<div id="progress" class="indeterminate"></div>
+      </div>
+    </div>
+    <div class="col s5">
+      <div class="info-progress" id="info">Выполняется применение</div>
+    </div>
+  </div>
+% content_with task_update => begin
+<script>
+function cu(){
+  console.log("check merge!");
+  $.post('/sync/merge/cu', function(d){
+    console.log(d.mtid);
+    if(d.mtid==0){location.reload()}
+    if('progress' in d){
+      console.log(d.progress+'%');
+      if($('#progress').hasClass('indeterminate')){
+        $('#progress').removeClass('indeterminate').addClass('determinate');
+      }
+      $('#progress').css('width', d.progress+'%')
+    }
+    if('info' in d){
+      $('#info').html(d.info)
+    }
+  });
+}
+setInterval(cu,2000);
+</script>
+% end
+% }
+
+<h6 id="log">Перечень последних операций (всего: <%= $log_lines_total %>)&nbsp;&nbsp; <%= link_to 'syncmergearchive' => begin %>Просмотр архива применённых изменений<% end %></h6>
+  <table class="striped small-log">
+    <thead>
+      <tr>
+	<th>Время, дата</th>
+	<th>Исполнитель</th>
+	<th>Информация</th>
+	<th>Результат</th>
+      </tr>
+    </thead>
+    <tbody>
+      % my $cnt = 0;
+      % my $ffd;
+      % while (my $next = $log_rec->hash) {
+      %   $ffd = $next->{fdate} unless $ffd;
+      <tr class="<%== ($log_active_page == 1 && $next->{fdate} eq $ffd)?'deep-purple-text text-darken-3':''%>">
+	<td><%= $next->{fdate}||'н/д' %></td>
+	<td><%= oprs $next->{login} %></td>
+	<td><%== display_log_hack $next->{info} %></td>
+	<td><%= ($next->{state} eq '10' or $next->{state} eq '90') ? 'Успешно' : 'Ошибка' %></td>
+      </tr>
+      % $cnt++;
+      % }
+      % unless ($cnt) {
+      <tr><td colspan="4">Перечень последних операций пуст</td></tr>
+      % }
+    </tbody>
+  </table>
+  %= m_page_nav($log_active_page, $log_num_pages, {round=>3, outer=>1, start=>1, class=>'center-align', param=>'p', query=>'#log'});
+</div>
+

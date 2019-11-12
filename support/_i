@@ -1,0 +1,11 @@
+#!/bin/bash
+
+#groupadd adup
+#useradd -N -g adup -M -d /opt/adup/run -s /bin/false -c "ADUP user" adup
+
+#chown -R adup:adup /opt/adup/run
+#chmod 0755 /opt/adup/run
+
+#chown -R adup:adup /opt/adup
+#find /opt/adup -type d -print0 | xargs -0 chmod 0755
+#find /opt/adup -type f -print0 | xargs -0 chmod 0644
