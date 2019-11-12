@@ -11,6 +11,7 @@ use Net::LDAP qw(LDAP_SUCCESS LDAP_INSUFFICIENT_ACCESS);
 use Net::LDAP::Util qw(canonical_dn escape_filter_value escape_dn_value);
 use Encode qw(decode);
 use Data::Dumper;
+use Mojo::File 'path';
 
 use lib "../lib";
 use Adup::Ural::Dblog;
@@ -24,23 +25,26 @@ use Adup::Ural::SyncDeleteOUs;
 
 binmode(STDOUT, ':utf8');
 
+my $cfg = eval path('../test.conf')->slurp;
+my $remote_user = 'test';
+
 # app object surrogate we need
 package Test::App;
 sub config { return {
-  ldap_base=>'DC=contoso,DC=local',
-  personnel_ldap_base=>'OU=1,DC=contoso,DC=local',
-  flatgroups_ldap_base=>'OU=2,DC=contoso,DC=local',
+  ldap_base=>$cfg->{ldap_base},
+  personnel_ldap_base=>"OU=1,$cfg->{ldap_base}",
+  flatgroups_ldap_base=>"OU=2,$cfg->{ldap_base}",
   user_cleanup_skip_dn => [
-    'OU=11CONTACTS,OU=1,DC=contoso,DC=local',
-    'OU=4SYSTEM,DC=contoso,DC=local',
-    'OU=5DISMISSED,DC=contoso,DC=local',
-    'OU=6TEMPORARY,DC=contoso,DC=local',
-    'OU=Admins,DC=contoso,DC=local',
-    'CN=Users,DC=contoso,DC=local',
-    'OU=SYSTEM,OU=UWC Users,DC=contoso,DC=local',
+    "OU=11CONTACTS,OU=1,$cfg->{ldap_base}",
+    "OU=4SYSTEM,$cfg->{ldap_base}",
+    "OU=5DISMISSED,$cfg->{ldap_base}",
+    "OU=6TEMPORARY,$cfg->{ldap_base}",
+    "OU=Admins,$cfg->{ldap_base}",
+    "CN=Users,$cfg->{ldap_base}",
+    "OU=SYSTEM,OU=UWC Users,$cfg->{ldap_base}",
   ],
   ou_cleanup_skip_dn => [
-    'OU=11CONTACTS,OU=1,DC=contoso,DC=local',
+    "OU=11CONTACTS,OU=1,$cfg->{ldap_base}",
   ],
 } }
 # job object surrogate we need
@@ -52,24 +56,18 @@ package main;
 my $job = bless {},'Test::Job';
 
 
-my $remote_user = 'ural';
-my $adup_db_conn = 'mysql://user:pass@srv/adup_test';
-my $ldapservers = ['ldap://dcsrv'];
-my $ldapuser = 'user';
-my $ldappass = 'pass';
-
-  my $mysql_adup = Mojo::mysql->new($adup_db_conn);
+  my $mysql_adup = Mojo::mysql->new($cfg->{adup_db_conn});
   my $db_adup = $mysql_adup->db;
 
   my $log = Adup::Ural::Dblog->new($db_adup, login=>$remote_user, state=>10);
 
-  my $ldap = Net::LDAP->new($ldapservers, port => 389, timeout => 10, version => 3);
+  my $ldap = Net::LDAP->new($cfg->{ldap_servers}, port => 389, timeout => 10, version => 3);
   unless ($ldap) {
     $log->l(state=>11, info=>"Произошла ошибка подключения к глобальному каталогу");
     die "LDAP creation error $@";
   }
 
-  my $mesg = $ldap->bind($ldapuser, password => $ldappass);
+  my $mesg = $ldap->bind($cfg->{ldap_user}, password => $cfg->{ldap_pass});
   if ($mesg->code) {
     $log->l(state=>11, info=>"Произошла ошибка авторизации при подключении глобальному каталогу");
     die "LDAP bind error ".$mesg->error;

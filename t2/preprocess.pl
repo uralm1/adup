@@ -11,23 +11,23 @@ use XBase;
 use Encode qw(decode encode_utf8);
 use Digest::SHA qw(sha1_hex);
 use Data::Dumper;
+use Mojo::File 'path';
 
 use lib "../lib";
 use Adup::Ural::Dblog;
 use Adup::Ural::FlatGroupNamingAI qw(flatgroup_ai);
 
-my $remote_user = 'ural';
-my $galdb_temporary_file = '/tmp/persons.dbf';
-my $adup_db_conn = 'mysql://user:pass@srv/adup_test';
+my $cfg = eval path('../test.conf')->slurp;
+my $remote_user = 'test';
 
-my $mysql_adup = Mojo::mysql->new($adup_db_conn);
+my $mysql_adup = Mojo::mysql->new($cfg->{adup_db_conn});
 my $db_adup = $mysql_adup->db;
 
   my $log = Adup::Ural::Dblog->new($db_adup, login=>$remote_user, state=>0);
 
   _setstate($db_adup, 1); #$job->id
 
-  my $dbf = eval { new XBase($galdb_temporary_file); };
+  my $dbf = eval { new XBase($cfg->{galdb_temporary_file}); };
 
   if (defined $dbf) {
     my $e = eval { 
