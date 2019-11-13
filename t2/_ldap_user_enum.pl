@@ -15,13 +15,13 @@ use Mojo::File 'path';
 
 my $cfg = eval path('../test.conf')->slurp;
 my $skip_dn = [
-  'OU=11CONTACTS,OU=1,DC=contoso,DC=local',
-  'OU=4SYSTEM,DC=contoso,DC=local',
-  'OU=5DISMISSED,DC=contoso,DC=local',
-  'OU=6TEMPORARY,DC=contoso,DC=local',
-  'OU=Admins,DC=contoso,DC=local',
-  'CN=Users,DC=contoso,DC=local',
-  'OU=SYSTEM,OU=UWC Users,DC=contoso,DC=local',
+  "OU=11CONTACTS,OU=1,$cfg->{ldap_base}",
+  "OU=4SYSTEM,$cfg->{ldap_base}",
+  "OU=5DISMISSED,$cfg->{ldap_base}",
+  "OU=6TEMPORARY,$cfg->{ldap_base}",
+  "OU=Admins,$cfg->{ldap_base}",
+  "CN=Users,$cfg->{ldap_base}",
+  "OU=SYSTEM,OU=UWC Users,$cfg->{ldap_base}",
 ];
 
 my $ldap = Net::LDAP->new($cfg->{ldap_servers}, port => 389, timeout => 10, version => 3);

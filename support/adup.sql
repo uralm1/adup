@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Хост: beko
--- Время создания: Окт 22 2019 г., 09:49
+-- Время создания: Окт 31 2019 г., 14:43
 -- Версия сервера: 10.1.26-MariaDB-0+deb9u1
 -- Версия PHP: 7.1.20-1+ubuntu14.04.1+deb.sury.org+1
 
@@ -64,7 +64,8 @@ INSERT INTO `changelog` (`ver_major`, `ver_minor`, `date`, `changelog`) VALUES
 (1, 3, '2019-08-23 00:00:00', 'Реализовано использование камеры устройства для съемки фото сотрудников.<br> \r\nСмена порядка выполнения синхронизаций для профилактики ошибок удаления учётных записей из отдельных групп почтового справочника.'),
 (1, 4, '2019-09-25 00:00:00', 'Смена порядка применения изменений для профилактики ошибок удаления учётных записей из отдельных групп почтового справочника.'),
 (1, 5, '2019-09-27 00:00:00', 'Досрочное завершение задания синхронизации изменений в случае если имеются изменения создания подразделений и групп почтового справочника - для экономии ресурсов. Все равно сначала необходимо создать подразделения, а затем перезапустить задание синхронизации.'),
-(1, 6, '2019-10-22 00:00:00', 'Автоматическое применение изменений создания и удаления подразделений в соответствии с их уровнем иерархии. Теперь не нужно их сортировать вручную.<br>\r\nУлучшение UI.');
+(1, 6, '2019-10-22 00:00:00', 'Автоматическое применение изменений создания и удаления подразделений в соответствии с их уровнем иерархии. Теперь не нужно их сортировать вручную.<br>\r\nУлучшение UI.'),
+(1, 7, '2019-10-25 00:00:00', 'Разрешено создание записей сотрудников с одинаковыми ФИО находящихся в разных подразделениях.<br>\r\nИзменены алгоритмы синхронизации учётных записей для сотрудников с одинаковыми ФИО.<br>\r\nНе поддерживается перемещение сотрудников с одинаковыми ФИО между подразделениями. Перемещение должно производиться вручную.<br>\r\nРеализован постраничный (Paged) поиск в LDAP при синхронизации удалений работников из групп почтового справочника.');
 
 -- --------------------------------------------------------
 
@@ -270,22 +271,22 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT для таблицы `changes`
 --
 ALTER TABLE `changes`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20109;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20472;
 --
 -- AUTO_INCREMENT для таблицы `changes_archive`
 --
 ALTER TABLE `changes_archive`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11023;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11309;
 --
 -- AUTO_INCREMENT для таблицы `op_log`
 --
 ALTER TABLE `op_log`
-  MODIFY `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2163;
+  MODIFY `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2293;
 --
 -- AUTO_INCREMENT для таблицы `persons`
 --
 ALTER TABLE `persons`
-  MODIFY `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=359507;COMMIT;
+  MODIFY `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=382687;COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;

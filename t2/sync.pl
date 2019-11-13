@@ -128,7 +128,7 @@ my $job = bless {},'Test::Job';
   #
   # SyncAttributesCreateMoveUsers subtask
   #
-=for comment
+#=for comment
   unless (defined Adup::Ural::SyncAttributesCreateMoveUsers::do_sync(
     db => $db_adup, 
     ldap => $ldap, 
@@ -139,12 +139,12 @@ my $job = bless {},'Test::Job';
     _setstate($db_adup, 0);
     die 'SyncAttributesCreateMoveUsers fatal error';
   }
-=cut
+#=cut
 
   #
   # SyncDeleteFlatGroups subtask
   #
-#=for comment
+=for comment
   unless (defined Adup::Ural::SyncDeleteFlatGroups::do_sync(
     db => $db_adup, 
     ldap => $ldap, 
@@ -155,7 +155,7 @@ my $job = bless {},'Test::Job';
     _setstate($db_adup, 0);
     die 'SyncDeleteFlatGroups fatal error';
   }
-#=cut
+=cut
 
   #
   # SyncDeleteUsers subtask
