@@ -1,3 +1,4 @@
+.gitattributes
 adup.conf
 lib/Adup.pm
 lib/Adup/Command/merge.pm
@@ -78,6 +79,7 @@ public/img/no-photo-icon.png
 public/js/jquery-3.4.1.min.js
 public/js/materialize.js
 public/js/materialize.min.js
+README.md
 script/adup
 script/check_db_hosts
 script/smbload
@@ -102,7 +104,6 @@ t/70_loginai.t
 t/71_checkdnbase.t
 t/72_operatorresolver.t
 t/90_dblog.t
-t2/11.pl
 t2/_fio_parser.pl
 t2/_ldap_grp_create.pl
 t2/_ldap_grp_delete.pl
@@ -124,6 +125,7 @@ t2/_ldap_user_create.pl
 t2/_ldap_user_enum.pl
 t2/_ldap_user_mv.pl
 t2/_ldap_user_rename.pl
+t2/_photo.pl
 t2/_sha.pl
 t2/_smb.pl
 t2/merge.pl
@@ -131,7 +133,6 @@ t2/otrs.jpg
 t2/preprocess.pl
 t2/sync.pl
 t2/t.html
-t2/ural.jpg
 templates/comp/comp.html.ep
 templates/index/about.html.ep
 templates/index/index.html.ep
@@ -146,5 +147,3 @@ templates/sync/index.html.ep
 templates/sync/mergearchive.html.ep
 templates/upload/index.html.ep
 test.conf
-META.yml                                 Module YAML meta-data (added by MakeMaker)
-META.json                                Module JSON meta-data (added by MakeMaker)

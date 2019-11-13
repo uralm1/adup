@@ -9,7 +9,7 @@ use Adup::Command::resettasks;
 use Adup::Ural::UsersCatalog;
 use Adup::Ural::OperatorResolver;
 
-our $VERSION = '1.6';
+our $VERSION = '1.7';
 
 # This method will run once at server start
 sub startup {
@@ -32,7 +32,9 @@ sub startup {
   $self->max_request_size(16777216);
 
   $self->plugin(Minion => {mysql => $config->{minion_db_conn}});
+  # FIXME DEBUG FIXME: open access to minion UI
   $self->plugin('Minion::Admin');
+
   $self->plugin('Adup::Plugin::MPagenav');
   $self->plugin('Adup::Plugin::Utils');
 

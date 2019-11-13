@@ -6,7 +6,7 @@ use POSIX qw(ceil);
 use Mojo::mysql;
 use Net::LDAP qw(LDAP_SUCCESS LDAP_INSUFFICIENT_ACCESS LDAP_NO_SUCH_OBJECT);
 use Net::LDAP::Util qw(canonical_dn escape_filter_value escape_dn_value);
-use Encode qw(decode);
+use Encode qw(decode_utf8);
 #use Data::Dumper;
 use Adup::Ural::ChangeOUCreate;
 use Adup::Ural::ChangeOUModify;
@@ -67,11 +67,8 @@ sub do_sync {
 
       my $ouname = substr($next->{name}, 0, 64);
       my $fullname = substr($next->{name}, 0, 1024);
-      my $name_dn = escape_dn_value $ouname;
       # build hierarhy dn
-      my $dn = "OU=$name_dn,";
-      append_dn_hier($depts_hash, $level, $next->{parent}, \$dn);
-      $dn .= $pers_ldapbase;
+      my $dn = $depts_hash->build_ou_dn($ouname, $level, $next->{parent}, $pers_ldapbase);
       #say $dn;
       #say $fullname;
 
@@ -90,8 +87,8 @@ sub do_sync {
       if ($count == 1) {
 	# found 1.
 	my $entry = $r->entry(0);
-	my $dn = decode('utf-8', $entry->dn);
-	my $description = decode('utf-8', $entry->get_value('description'));
+	my $dn = decode_utf8($entry->dn);
+	my $description = decode_utf8($entry->get_value('description'));
 	#say "found description: $description";
 	# compare with $gname and create change to modify ou
 	# compare only first 64 chars to solve problem with departments with the same names
@@ -105,7 +102,7 @@ sub do_sync {
       } elsif ($count > 1) {
 	# more than 1. This is VERY strange situation... just create error change
 	my $entry = $r->entry(0);
-	my $dn = decode('utf-8', $entry->dn);
+	my $dn = decode_utf8($entry->dn);
 	# create errorchange
 	my $c = Adup::Ural::ChangeError->new($next->{name}, $dn, $args{user});
 	$c->set_error("Подразделение, уровень $level. В AD найдено более одного подразделения с одинаковым именем OU (смотри имя объекта).");
@@ -142,29 +139,6 @@ sub do_sync {
   $args{log}->l(info => "*ЗАПУСК СИНХРОНИЗАЦИИ* Синхронизация подразделений. Рассчитано $changes_count изменений подразделений по $line_count подразделениям на $max_level уровнях иерархии.");
 
   return $changes_count;
-}
-
-
-# internal
-# append_dn_hier($depts_hash, $level, $next->{parent}, \$dn);
-sub append_dn_hier {
-  my $depts_href = shift;
-  my $level = shift;
-  my $cur_parent = shift;
-  my $dn_ref = shift;
- 
-  return 1 if ($level == 0);
-
-  #say "processing uplevel: $level";
-  if (my $vh = $depts_href->{$cur_parent}) {
-    my $ouname = substr($vh->{name}, 0, 64);
-    my $name_dn = escape_dn_value $ouname;
-    $$dn_ref .= "OU=$name_dn,";
-    append_dn_hier($depts_href, --$level, $vh->{parent}, $dn_ref);
-  } else {
-    carp "DN Hierarhy build failure. Unexpected database structure problem.";
-    return 0;
-  }
 }
 
 

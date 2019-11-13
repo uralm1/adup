@@ -7,11 +7,12 @@ use Mojo::mysql;
 use Net::LDAP qw(LDAP_SUCCESS LDAP_INSUFFICIENT_ACCESS LDAP_NO_SUCH_OBJECT LDAP_SIZELIMIT_EXCEEDED LDAP_CONTROL_PAGED);
 use Net::LDAP::Util qw(canonical_dn escape_filter_value escape_dn_value);
 use Net::LDAP::Control::Paged;
-use Encode qw(decode);
+use Encode qw(decode_utf8);
 #use Data::Dumper;
 use Adup::Ural::ChangeUserDelete;
 use Adup::Ural::ChangeError;
 use Adup::Ural::Dblog;
+use Adup::Ural::DeptsHash;
 
 # changes_count/undef = Adup::Ural::SyncDeleteUsers::do_sync(
 #   db => $db_adup,
@@ -25,16 +26,34 @@ sub do_sync {
   for (qw/db ldap log job user/) { croak 'Required parameters missing' unless defined $args{$_}};
   say "in SyncDeleteUsers subtask";
 
+  # extract all dept records into one hash cache
+  my $depts_hash = Adup::Ural::DeptsHash->new($args{db}) or return undef;
+
+  my $ldapbase = $args{job}->app->config->{ldap_base};
+  my $pers_ldapbase = $args{job}->app->config->{personnel_ldap_base};
+
   # upload persons table from database into memory
   my %persons_hash; # cn is a key
+  my %dup_persons_hash; # dn is a key
   my $entries_total;
   my $e = eval {
-    my $r = $args{db}->query("SELECT fio, dup, tabn \
+    my $r = $args{db}->query("SELECT fio, dup, tabn, dept_id \
       FROM persons \
       ORDER BY id ASC");
     $entries_total = $r->rows;
     while (my $next = $r->hash) {
-      $persons_hash{substr($next->{fio}, 0, 64)} = $next->{tabn} if ($next->{dup} == 0);
+      my $dup = $next->{dup};
+      my $cn = substr($next->{fio}, 0, 64);
+      if ($dup == 0) {
+        # unique
+        $persons_hash{$cn} = $next->{tabn};
+      } elsif ($dup == 1) {
+        # dups in different departments
+	# create user dn
+        my $dn_built = canonical_dn($depts_hash->build_user_dn($cn, $next->{dept_id}, $pers_ldapbase));
+        $dup_persons_hash{$dn_built} = $next->{tabn};
+	#say $dn_built;
+      }
     }
     $r->finish;
   };
@@ -43,7 +62,8 @@ sub do_sync {
     return undef;
   }
 
-  my $ldapbase = $args{job}->app->config->{ldap_base};
+  $depts_hash = undef; # free mem
+
   # load exclusions array
   my $skip_dn = $args{job}->app->config->{user_cleanup_skip_dn};
   croak 'user_cleanup_skip_dn is missing!' unless defined $skip_dn;
@@ -80,24 +100,26 @@ sub do_sync {
       ENTRYLOOP:
       for my $entry ($res->entries) {
 	# filter by DN
-	my $canon_dn = canonical_dn($entry->dn);
+	my $canon_dn = canonical_dn(decode_utf8($entry->dn));
 	for (@$skip_dn) {
 	  next ENTRYLOOP if ($canon_dn =~ /$_$/);
 	}
 
 	# check if cn exists in persons hash
-	my $cn = decode('utf-8', $entry->get_value('cn'));
+	my $cn = decode_utf8($entry->get_value('cn'));
 	unless (exists $persons_hash{$cn}) {
 	  #say $entry->get_value('cn').' '.$entry->dn;
-	  my $c = Adup::Ural::ChangeUserDelete->new($cn, decode('utf-8', $entry->dn), $args{user});
-	  $c->cn($cn);
-	  $c->login(decode('utf-8', $entry->get_value('sAMAccountName'))) if ($entry->get_value('sAMAccountName'));
-	  $c->email(decode('utf-8', $entry->get_value('mail'))) if ($entry->get_value('mail'));
-	  my $uac = $entry->get_value('userAccountControl') || 0x200;
-	  $c->disabled(($uac & 2) == 2);
-	  $c->todb(db => $args{db});
+	  unless (exists $dup_persons_hash{$canon_dn}) {
+	    my $c = Adup::Ural::ChangeUserDelete->new($cn, decode_utf8($entry->dn), $args{user});
+	    $c->cn($cn);
+	    $c->login(decode_utf8($entry->get_value('sAMAccountName'))) if ($entry->get_value('sAMAccountName'));
+	    $c->email(decode_utf8($entry->get_value('mail'))) if ($entry->get_value('mail'));
+	    my $uac = $entry->get_value('userAccountControl') || 0x200;
+	    $c->disabled(($uac & 2) == 2);
+	    $c->todb(db => $args{db});
 
-	  $delete_changes_count++;
+	    $delete_changes_count++;
+	  }
 	}
 
         # update progress

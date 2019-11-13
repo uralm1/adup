@@ -6,7 +6,7 @@ use POSIX qw(ceil);
 use Mojo::mysql;
 use Net::LDAP qw(LDAP_SUCCESS LDAP_INSUFFICIENT_ACCESS LDAP_NO_SUCH_OBJECT);
 use Net::LDAP::Util qw(canonical_dn escape_filter_value escape_dn_value);
-use Encode qw(decode);
+use Encode qw(decode_utf8);
 #use Data::Dumper;
 use Adup::Ural::ChangeUserCreate;
 use Adup::Ural::ChangeUserMove;
@@ -57,19 +57,51 @@ sub do_sync {
   my $ldapbase = $args{job}->app->config->{ldap_base};
   my $pers_ldapbase = $args{job}->app->config->{personnel_ldap_base};
   my $fg_ldapbase = $args{job}->app->config->{flatgroups_ldap_base};
+  my @attributes = qw/givenName sn middleName displayName initials title company department description employeeID/;
 
   while (my $next = $res->hash) {
-    if ($next->{dup} == 0) {
-      #say "Обрабатываем ФИО: $next->{fio}";
-      # search ldap
-      my $cn = substr($next->{fio}, 0, 64);
-      my $ffio = escape_filter_value $cn;
-      my $filter = "(&(objectCategory=person)(objectClass=user)(cn=$ffio))";
-      my @attributes = qw/givenName sn middleName displayName initials title company department description employeeID/;
-      my $r = $args{ldap}->search(base => $ldapbase, scope => 'sub',
-	filter => $filter, 
-	attrs => [ 'cn','name', @attributes ]
-      );
+    #say "Обрабатываем ФИО: $next->{fio}";
+    my $cn = substr($next->{fio}, 0, 64);
+
+    # build hierarhical user dn
+    my $dn_built = $depts_hash->build_user_dn($cn, $next->{dept_id}, $pers_ldapbase);
+    #say $dn_built;
+
+    # build hash of reference attributes (from database)
+    my $refhash = {};
+    $refhash->{givenName} = substr($next->{i}, 0, 64) if $next->{i};
+    $refhash->{sn} = substr($next->{f}, 0, 64) if $next->{f};
+    $refhash->{middleName} = substr($next->{o}, 0, 64) if $next->{o};
+    $refhash->{displayName} = substr($next->{fio}, 0, 256);
+    $refhash->{initials} = _abbr($next->{fio});
+    $refhash->{title} = substr($next->{dolj}, 0, 128) if $next->{dolj};
+    $refhash->{company} = 'МУП "Уфаводоканал"';
+    $refhash->{department} = substr($next->{dept}, 0, 64) if $next->{dept};
+    $refhash->{description} = substr($next->{otdel}, 0, 1024) if $next->{otdel};
+    $refhash->{employeeID} = substr($next->{tabn}, 0, 16) if $next->{tabn};
+
+
+    my $dup = $next->{dup};
+    if ($dup == 0 || $dup == 1) {
+      my $r;
+      if ($dup == 0) {
+        # ** unique fio-s **
+        # search ldap globally
+        my $filter_fio = escape_filter_value $cn;
+        my $filter = "(&(objectCategory=person)(objectClass=user)(cn=$filter_fio))";
+        $r = $args{ldap}->search(base => $ldapbase, scope => 'sub',
+  	  filter => $filter, 
+	  attrs => [ 'cn','name', @attributes ]
+        );
+      } elsif ($dup == 1) {
+	# ** duplicates in different departments **
+	# search ldap inside only department
+	$r = $args{ldap}->search(base => $dn_built, scope => 'base',
+	  filter => '(&(objectCategory=person)(objectClass=user))', 
+	  attrs => [ 'cn','name', @attributes ]
+	);
+      } else { die 'FIXME'; }
+
       if ($r->code && $r->code != LDAP_NO_SUCH_OBJECT) {
         $args{log}->l(state => 11, info => "Синхронизация пользователей. Произошла ошибка поиска в AD.");
 	carp 'SyncAttributesCreateMoveUsers - ldap search error: '.$r->error."for CN: $cn";
@@ -79,30 +111,17 @@ sub do_sync {
       my $count = $r->count;
       #say "Найдено: $count";
       
-      # hash of reference attributes (from database)
-      my $refhash = {};
-      $refhash->{givenName} = substr($next->{i}, 0, 64) if $next->{i};
-      $refhash->{sn} = substr($next->{f}, 0, 64) if $next->{f};
-      $refhash->{middleName} = substr($next->{o}, 0, 64) if $next->{o};
-      $refhash->{displayName} = substr($next->{fio}, 0, 256);
-      $refhash->{initials} = _abbr($next->{fio});
-      $refhash->{title} = substr($next->{dolj}, 0, 128) if $next->{dolj};
-      $refhash->{company} = 'МУП "Уфаводоканал"';
-      $refhash->{department} = substr($next->{dept}, 0, 64) if $next->{dept};
-      $refhash->{description} = substr($next->{otdel}, 0, 1024) if $next->{otdel};
-      $refhash->{employeeID} = substr($next->{tabn}, 0, 16) if $next->{tabn};
-
       if ($count == 1) {
 	# found 1. check and sync attributes
 	my $entry = $r->entry(0);
 	#say Dumper $entry;
-	my $dn = decode('utf-8', $entry->dn);
+	my $dn = decode_utf8($entry->dn);
 	my $canon_dn = canonical_dn($dn);
 	#say 'dn: '.$dn;
        
 	# hash of existing attributes (from AD)
 	my $exhash = {};
-	my $get_val_func = sub { $exhash->{$_[0]} = decode('utf-8', $entry->get_value($_[0])) if defined $entry->get_value($_[0]); };
+	my $get_val_func = sub { $exhash->{$_[0]} = decode_utf8($entry->get_value($_[0])) if defined $entry->get_value($_[0]); };
 	$get_val_func->($_) for (@attributes);
 	#for (keys %$refhash) { say $_.' => '.$refhash->{$_}; }
 	#for (keys %$exhash) { say $_.' => '.$exhash->{$_}; }
@@ -162,18 +181,12 @@ sub do_sync {
 	  $attr_changes_count++;
         }
 
-	# moving user
-	# build user valid dn hierarhy
-        my $name_cn = escape_dn_value $cn; #fio cut to 64
-        my $valid_dn = "CN=$name_cn,";
-        append_dn_hier2($depts_hash, $next->{dept_id}, \$valid_dn);
-        $valid_dn .= $pers_ldapbase;
-	#say $valid_dn;
-	if ($canon_dn ne canonical_dn($valid_dn)) {
-	  # user has to be moved to $valid_dn
-	  #say $dn."\n".$valid_dn."\n";
+	# moving user (only for unique persons)
+	if ($dup == 0 and $canon_dn ne canonical_dn($dn_built)) {
+	  # user has to be moved to $dn_built
+	  #say $dn."\n".$dn_built."\n";
 	  my $c = Adup::Ural::ChangeUserMove->new($next->{fio}, $dn, $args{user});
-	  $c->new_dn($valid_dn); #new_dn is mandatory
+	  $c->new_dn($dn_built); #new_dn is mandatory
 	  $c->todb(db => $args{db});
 
 	  $move_changes_count++;
@@ -182,21 +195,14 @@ sub do_sync {
       } elsif ($count > 1) {
 	# found more than 1.
 	my $entry = $r->entry(0);
-	my $dn = decode('utf-8', $entry->dn);
+	my $dn = decode_utf8($entry->dn);
 	my $c = Adup::Ural::ChangeError->new($next->{fio}, $dn, $args{user});
-	$c->set_error('В AD найдено более одной учётной записи с одинаковым CN (смотри имя объекта).');
+	$c->set_error('Требуется ручное вмешательство. В AD найдено более одной учётной записи с одинаковым CN (смотри имя объекта).');
 	$c->todb(db => $args{db});
 
       } else {
 	# user not found.
-	# build user dn hierarhy
-        my $name_cn = escape_dn_value $cn; #fio cut to 64
-        my $dn = "CN=$name_cn,";
-        append_dn_hier2($depts_hash, $next->{dept_id}, \$dn);
-        $dn .= $pers_ldapbase;
-	#say $dn;
-	
-	my $c = Adup::Ural::ChangeUserCreate->new($next->{fio}, $dn, $args{user});
+	my $c = Adup::Ural::ChangeUserCreate->new($next->{fio}, $dn_built, $args{user});
 	$c->set_cn($cn); #cn is mandatory
 	for (@attributes) {
 	  $c->set_attr($_, $refhash->{$_}) if (exists $refhash->{$_});
@@ -212,7 +218,8 @@ sub do_sync {
       }
 
     } else {
-      $args{log}->l(state=>11, info => "Дублирующееся ФИО: $next->{fio} пропущено. Внимание! Имеются сотрудники с одинаковыми ФИО.");
+      # **duplicates in one department**
+      $args{log}->l(state=>11, info => "Дублирующееся ФИО: $next->{fio} пропущено. Внимание! Имеются сотрудники с одинаковыми ФИО в одном подразделении.");
       #say "Дублирующееся ФИО: $next->{fio} пропущено";
     }
 
@@ -246,26 +253,6 @@ sub _abbr {
     push @abbr, substr($w, 0, 1);
   }
   return uc join('', @abbr);
-}
-
-
-# append_dn_hier2($depts_hash, $next->{dept_id}, \$dn);
-sub append_dn_hier2 {
-  my $depts_href = shift;
-  my $cur_parent = shift;
-  my $dn_ref = shift;
- 
-  return 1 if ($cur_parent == 0);
-
-  if (my $vh = $depts_href->{$cur_parent}) {
-    my $ouname = substr($vh->{name}, 0, 64);
-    my $name_dn = escape_dn_value $ouname;
-    $$dn_ref .= "OU=$name_dn,";
-    append_dn_hier2($depts_href, $vh->{parent}, $dn_ref);
-  } else {
-    carp "DN Hierarhy build failure. Unexpected database structure problem.";
-    return 0;
-  }
 }
 
 

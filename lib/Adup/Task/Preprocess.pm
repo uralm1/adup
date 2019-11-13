@@ -50,6 +50,7 @@ sub _process_dbf {
     my %path_id_h;
     my %id_dept_h;
     my %fio_dedup_h;
+    my %fio_otd_dedup_h;
     my $id_gen_val = 1;
     my %flatdept_dedup_h;
     my $flatdept_id_gen_val = 1;
@@ -85,17 +86,25 @@ sub _process_dbf {
 	$dolj = '' unless defined $dolj;
 	$tabn = 0 unless defined $tabn;
 
-	# fio dedup
-	if (defined $fio_dedup_h{$fio}) {
-	  $fio_dedup_h{$fio}++;
+	$otdel = decode('cp866', $otdel);
+
+	# fio dedup (and then dedup by fio+otdel)
+	if (exists $fio_dedup_h{$fio}) {
+          # fio+otdel
+	  my $fio_otd = join('', $fio, $otdel);
+	  if (exists $fio_otd_dedup_h{$fio_otd}) {
+	    #$fio_otd_dedup_h{$fio_otd} = 1; # not needed
+	    $fio_dedup_h{$fio} = 2;
+	  } else {
+	    $fio_otd_dedup_h{$fio_otd} = 0;
+	    $fio_dedup_h{$fio} = 1;
+	  }
 	} else {
 	  $fio_dedup_h{$fio} = 0;
 	}
 
-	$otdel = decode('cp866', $otdel);
-
 	# flatdept dedup
-	unless (defined $flatdept_dedup_h{$otdel}) {
+	unless (exists $flatdept_dedup_h{$otdel}) {
 	  $flatdept_dedup_h{$otdel} = $flatdept_id_gen_val;
 	  $flatdept_id_gen_val++;
 	}
@@ -108,7 +117,7 @@ sub _process_dbf {
 	    VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
 	    $id, 
 	    $fio,
-	    $fio_dedup_h{$fio},
+	    0, #1.7 will update later
 	    $fio_f, $fio_i, $fio_o,
 	    $path_id_h{$otdel},
 	    $flatdept_dedup_h{$otdel},
@@ -137,12 +146,32 @@ sub _process_dbf {
     ### end of persons loop ###
     #
 
+    #
+    ### 2.update duplicates ###
+    #
+    for my $fio (keys %fio_dedup_h) {
+      if ($fio_dedup_h{$fio} > 0) {
+	$e = eval { 
+	  $db_adup->query("UPDATE persons SET dup = ? WHERE fio = ?", $fio_dedup_h{$fio}, $fio);
+	};
+	unless (defined $e) {
+          $log->l(state => 1, info => "Произошла ошибка обновления дубликатов в таблице persons, $loaded_cnt сотрудников обработано");
+	  $job->app->reset_task_state($db_adup, $TASK_ID);
+	  return $job->fail('Mysql update dublicates in table persons error');
+	}
+      }
+    }
+    #
+    ### done ###
+    #
+
     $job->note(
       progress => 100,
       info => 'Выполняется разбор оргструктуры подразделений',
     );
+
     #
-    ### 2.begin of saving processed depts hash ###
+    ### 3.begin of saving processed depts hash ###
     #
     my $dept_loaded_cnt = 0;
     #say Dumper \%id_dept_h;
@@ -168,7 +197,7 @@ sub _process_dbf {
     #
 
     #
-    ### 3.begin of saving flat depts hash ###
+    ### 4.begin of saving flat depts hash ###
     #
     my $flatdept_loaded_cnt = 0;
     #say Dumper \%flatdept_dedup_h;

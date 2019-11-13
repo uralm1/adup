@@ -6,7 +6,7 @@ use Carp;
 use Net::LDAP qw(LDAP_SUCCESS LDAP_INSUFFICIENT_ACCESS LDAP_ALREADY_EXISTS);
 use Net::LDAP::Util qw(ldap_explode_dn canonical_dn unescape_dn_value);
 use Adup::Ural::Dblog;
-use Encode qw(decode);
+use Encode qw(decode_utf8);
 
 #use Data::Dumper;
 
@@ -57,11 +57,11 @@ sub merge {
   $self->_set_merged($args{author});
 
   #say "DN: $self->{dn}";
-  #say 'Member DN: '.decode('utf-8', $self->member_dn);
+  #say 'Member DN: '.decode_utf8($self->member_dn);
   # really remove user from group
   my $mesg = $args{ldap}->modify($self->{dn},
     delete => {
-      member => [ decode('utf-8', $self->member_dn) ],
+      member => [ decode_utf8($self->member_dn) ],
     }
   );
 

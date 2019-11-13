@@ -4,14 +4,16 @@ use Mojo::Base -base;
 use Carp;
 use POSIX qw(ceil);
 use Mojo::mysql;
-use Net::LDAP qw(LDAP_SUCCESS LDAP_INSUFFICIENT_ACCESS LDAP_NO_SUCH_OBJECT LDAP_SIZELIMIT_EXCEEDED);
+use Net::LDAP qw(LDAP_SUCCESS LDAP_INSUFFICIENT_ACCESS LDAP_NO_SUCH_OBJECT LDAP_SIZELIMIT_EXCEEDED LDAP_CONTROL_PAGED);
 use Net::LDAP::Util qw(canonical_dn ldap_explode_dn escape_filter_value escape_dn_value);
-use Encode qw(decode);
+use Net::LDAP::Control::Paged;
+use Encode qw(decode_utf8);
 #use Data::Dumper;
 use Adup::Ural::ChangeFlatGroupDelete;
 use Adup::Ural::ChangeUserFlatGroup;
 use Adup::Ural::ChangeError;
 use Adup::Ural::Dblog;
+use Adup::Ural::DeptsHash;
 
 # 1/undef = Adup::Ural::SyncDeleteFlatGroups::do_sync(
 #   db => $db_adup,
@@ -27,10 +29,12 @@ sub do_sync {
 
   # load flatdepts table from database to memory hash
   my %fg_hash; # cn is a key
+  my $entries_total;
   my $e = eval {
     my $r = $args{db}->query("SELECT id, cn \
       FROM flatdepts \
       ORDER BY id ASC");
+    $entries_total = $r->rows;
     while (my $next = $r->hash) {
       $fg_hash{$next->{cn}} = $next->{id};
     }
@@ -41,15 +45,32 @@ sub do_sync {
     return undef;
   }
 
+  # extract all dept records into one hash cache
+  my $depts_hash = Adup::Ural::DeptsHash->new($args{db}) or return undef;
+
+  my $pers_ldapbase = $args{job}->app->config->{personnel_ldap_base};
+  my $fg_ldapbase = $args{job}->app->config->{flatgroups_ldap_base};
+
   # load persons table from database to memory
-  my %pers_hash; #fio cut to 64 is a key
+  my %persons_hash; # cn (fio cut to 64) is a key
+  my %dup_persons_hash; # dn is a key
   $e = eval {
-    my $r = $args{db}->query("SELECT fio, dup, flatdept_id \
+    my $r = $args{db}->query("SELECT fio, dup, dept_id, flatdept_id \
       FROM persons \
       ORDER BY id ASC");
     while (my $next = $r->hash) {
-      $pers_hash{substr($next->{fio}, 0, 64)} = $next->{flatdept_id} if $next->{dup} == 0;
-      # warning duplicates... have to fix to later
+      my $dup = $next->{dup};
+      my $cn = substr($next->{fio}, 0, 64);
+      if ($dup == 0) {
+	# unique
+        $persons_hash{$cn} = $next->{flatdept_id};
+      } elsif ($dup == 1) {
+	# dups in different departments
+	# create user dn
+        my $dn_built = canonical_dn($depts_hash->build_user_dn($cn, $next->{dept_id}, $pers_ldapbase));
+        $dup_persons_hash{$dn_built} = $next->{flatdept_id};
+	#say $dn_built;
+      }
     }
     $r->finish;
   };
@@ -58,90 +79,124 @@ sub do_sync {
     return undef;
   }
 
-
-  my $fgldapbase = $args{job}->app->config->{flatgroups_ldap_base};
+  $depts_hash = undef; # free mem
 
   #
   ### begin of flat groups loop ###
   #
-  my $res = $args{ldap}->search(base => $fgldapbase, scope => 'sub',
-    filter => '(&(objectCategory=group)(objectClass=group))', 
-    attrs => ['cn', 'grouptype', 'description', 'member']
-  );
-  if ($res->code && $res->code != LDAP_NO_SUCH_OBJECT) {
-    $args{log}->l(state => 11, info => "Удаление групп почтового справочника. Произошла ошибка поиска в AD.");
-    carp 'SyncDeleteFlatGroups - ldap search error: '.$res->error;
-    return undef;
-  }
+  my $pagedctl = Net::LDAP::Control::Paged->new(size => 100);
 
-  my $entries_total = $res->count;
-  #say "Found entries: $entries_total";
+  my @searchargs = ( base => $fg_ldapbase, scope => 'sub',
+    filter => '(&(objectCategory=group)(objectClass=group))', 
+    attrs => ['cn', 'grouptype', 'description', 'member'],
+    control => [ $pagedctl ]
+  );
+
+
   my $mod = int($entries_total / 20) || 1;
   my $entry_count = 0;
   my $delete_changes_count = 0;
   my $user_delete_flatgroup_changes_count = 0;
+  my $cookie;
+  my $res;
+  while (1) {
+    $res = $args{ldap}->search(@searchargs);
 
-  while (my $entry = $res->shift_entry) {
+    # break loop on error
+    $res->code and last;
+
     ## consume results
-    my $dn = decode('utf-8', $entry->dn);
-    my $cn = decode('utf-8', $entry->get_value('cn'));
-    my $name = decode('utf-8', $entry->get_value('description')) || $cn;
-    # verify group type
-    my $grouptype = $entry->get_value('grouptype');
-    if (!defined $grouptype || $grouptype != 2) {
-      # create errorchange
-      my $c = Adup::Ural::ChangeError->new($cn, $dn, $args{user});
-      $c->set_error('Группа корпоративной почты. В AD найдена группа неправильного типа (смотри имя объекта).');
-      $c->todb(db => $args{db});
-
-    } elsif (!exists $fg_hash{$cn}) {
-      # if cn not exists in flatgroups hash
-      #say $dn;
-      my $c = Adup::Ural::ChangeFlatGroupDelete->new($name, $dn, $args{user});
-      $c->todb(db => $args{db});
-
-      $delete_changes_count++;
-    } else {
-      # flat group is actual, get members
-      for my $member ($entry->get_value('member')) {
-        my $aofh = ldap_explode_dn($member);
-	unless ($aofh) {
-	  carp 'SyncDeleteFlatGroups - flatgroup member dn explode failure';
-	  return undef;
-	}
-        my $cnhr = shift @$aofh;
-	unless ($cnhr) {
-	  carp 'SyncDeleteFlatGroups - flatgroup member cn extraction failure';
-	  return undef;
-	}
-	my $member_cn = decode('utf-8', $cnhr->{CN});
-        my $id_from_hash = $pers_hash{$member_cn};
-        if (!defined $id_from_hash or $fg_hash{$cn} != $id_from_hash) {
-	  #say "$member_cn in $name";
-	  my $c = Adup::Ural::ChangeUserFlatGroup->new($member_cn, $dn, $args{user})
-	    ->member_cn($member_cn)
-	    ->member_dn($member)
-	    ->flatgroup_name($name);
-  
+    my $count = $res->count;
+    #say "Found entries: $count";
+    if ($count > 0) {
+      for my $entry ($res->entries) {
+	my $dn = decode_utf8($entry->dn);
+	my $cn = decode_utf8($entry->get_value('cn'));
+	my $name = decode_utf8($entry->get_value('description')) || $cn;
+	# verify group type
+	my $grouptype = $entry->get_value('grouptype');
+	if (!defined $grouptype || $grouptype != 2) {
+	  # create errorchange
+	  my $c = Adup::Ural::ChangeError->new($cn, $dn, $args{user});
+	  $c->set_error('Группа корпоративной почты. В AD найдена группа неправильного типа (смотри имя объекта).');
 	  $c->todb(db => $args{db});
 
-	  $user_delete_flatgroup_changes_count++;
+	} elsif (!exists $fg_hash{$cn}) {
+	  # if cn not exists in flatgroups hash
+	  #say $dn;
+	  my $c = Adup::Ural::ChangeFlatGroupDelete->new($name, $dn, $args{user});
+	  $c->todb(db => $args{db});
+
+	  $delete_changes_count++;
+	} else {
+	  my $fgid = $fg_hash{$cn};
+	  # flat group is actual, get members
+	  for my $member ($entry->get_value('member')) {
+	    my $aofh = ldap_explode_dn($member);
+	    unless ($aofh) {
+	      carp 'SyncDeleteFlatGroups - flatgroup member dn explode failure';
+	      return undef;
+	    }
+	    my $cnhr = shift @$aofh;
+	    unless ($cnhr) {
+	      carp 'SyncDeleteFlatGroups - flatgroup member cn extraction failure';
+	      return undef;
+	    }
+	    my $member_cn = decode_utf8($cnhr->{CN});
+	    my $id_from_hash = $persons_hash{$member_cn};
+	    if (!defined $id_from_hash or $id_from_hash != $fgid) {
+	      #say "$member_cn in $name";
+	      $id_from_hash = $dup_persons_hash{canonical_dn(decode_utf8($member))};
+	      if (!defined $id_from_hash or $id_from_hash != $fgid ) {
+		my $c = Adup::Ural::ChangeUserFlatGroup->new($member_cn, $dn, $args{user})
+		  ->member_cn($member_cn)
+		  ->member_dn($member)
+		  ->flatgroup_name($name);
+	
+		$c->todb(db => $args{db});
+
+		$user_delete_flatgroup_changes_count++;
+	      }
+	    }
+	  }
+
 	}
-      }
 
-    }
+	# update progress
+	$entry_count ++;
+	if ($entry_count % $mod == 0) {
+	  my $percent = ceil($entry_count / $entries_total * 100);
+	  $args{job}->note(
+	    progress => $percent,
+	    info => "$percent% Завершающая синхронизация групп почтового справочника",
+	  );
+	}
+      } # entries loop
 
-    # update progress
-    $entry_count ++;
-    if ($entry_count % $mod == 0) {
-      my $percent = ceil($entry_count / $entries_total * 100);
-      $args{job}->note(
-	progress => $percent,
-	info => "$percent% Завершающая синхронизация групп почтового справочника",
-      );
-    }
+    } # if ($count > 0)
 
-  } # entries loop
+    my ($resp) = $res->control(LDAP_CONTROL_PAGED) or last;
+    $cookie = $resp->cookie;
+
+    # continue if cookie is nonempty
+    last if (!defined($cookie) || !length($cookie));
+
+    # set cookie in paged control
+    $pagedctl->cookie($cookie);
+  }
+
+  if (defined($cookie) && length($cookie)) {
+    # abnormal exit, so let the server know we dont want any more
+    $pagedctl->cookie($cookie);
+    $pagedctl->size(0);
+    $args{ldap}->search(@searchargs);
+  }
+
+  if ($res->code) {
+    $args{log}->l(state => 11, info => "Удаление групп почтового справочника. Произошла ошибка поиска в AD.");
+    carp 'SyncDeleteFlatGroups - ldap search error: '.$res->error;
+    return undef;
+  }
 
   $args{log}->l(info => "Завершающая синхронизация групп почтового справочника. Создано $user_delete_flatgroup_changes_count изменений по удалению пользователей из групп почтового справочника, $delete_changes_count изменений удаления групп, по $entry_count группам почтового справочника.");
 
