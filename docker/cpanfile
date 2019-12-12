@@ -1,0 +1,11 @@
+requires "EV";
+requires "Mojolicious";
+requires "Mojo::mysql";
+requires "Minion";
+requires "Minion::Backend::mysql";
+requires "XBase";
+requires "Net::LDAP";
+requires "Net::LDAP::Util";
+requires "MIME::Base64";
+requires "Digest::SHA";
+
