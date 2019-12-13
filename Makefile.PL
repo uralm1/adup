@@ -1,7 +1,8 @@
 use strict;
 use warnings;
 
-use ExtUtils::MakeMaker;
+#use ExtUtils::MakeMaker;
+use ExtUtils::MakeMaker::CPANfile;
 
 my $inst_dir = '/opt/adup';
 
@@ -10,17 +11,17 @@ WriteMakefile(
   AUTHOR => 'Ural Khasanov <uralm@uwc.ufanet.ru>',
   DISTNAME => 'adup',
   VERSION_FROM   => 'lib/Adup.pm',
-  PREREQ_PM => {
-    'Mojolicious' => '8.09',
-    'Mojo::mysql' => '1.04',
-    'Minion' => '9.03',
-    'Minion::Backend::mysql' => 0,
-    'XBase' => 0,
-    'Net::LDAP' => '0.65',
-    'Net::LDAP::Util' => 0,
-    'MIME::Base64' => 0,
-    'Digest::SHA' => 0,
-  },
+  #PREREQ_PM => {
+  #  'Mojolicious' => '8.09',
+  #  'Mojo::mysql' => '1.04',
+  #  'Minion' => '9.03',
+  #  'Minion::Backend::mysql' => 0,
+  #  'XBase' => 0,
+  #  'Net::LDAP' => '0.65',
+  #  'Net::LDAP::Util' => 0,
+  #  'MIME::Base64' => 0,
+  #  'Digest::SHA' => 0,
+  #},
   test      => {TESTS => 't/*.t'},
   PREFIX => $inst_dir,
   LIB => "$inst_dir/lib",
