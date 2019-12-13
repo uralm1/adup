@@ -8,6 +8,7 @@ requires 'Net::LDAP', '0.65';
 requires 'Net::LDAP::Util';
 requires 'MIME::Base64';
 requires 'Digest::SHA';
+requires 'ExtUtils::MakeMaker::CPANfile';
 
 on 'configure' => sub {
   requires 'ExtUtils::MakeMaker';

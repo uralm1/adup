@@ -1,7 +1,6 @@
 .git
 log
 run
-t2
 Makefile
 .gitattributes
 .gitignore
