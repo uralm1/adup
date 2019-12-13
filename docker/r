@@ -1,5 +1,0 @@
-#!/bin/bash
-
-docker run -d --name adup \
-  -h adup \
-  uralm1/adup
