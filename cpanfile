@@ -8,6 +8,8 @@ requires 'Net::LDAP', '0.65';
 requires 'Net::LDAP::Util';
 requires 'MIME::Base64';
 requires 'Digest::SHA';
+requires 'DateTime';
+requires 'DateTime::Format::MySQL';
 requires 'ExtUtils::MakeMaker::CPANfile';
 
 on 'configure' => sub {

@@ -1,5 +1,7 @@
 #!/bin/bash
 
-docker run -d --name adup \
-  -h adup \
+docker run -it --name adup-test \
+  -h adup-test \
+  -v /home/sv/src/dock_test/adup.conf:/opt/adup/adup.conf:ro \
+  -p 3000:3000 \
   uralm1/adup

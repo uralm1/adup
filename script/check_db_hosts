@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 ip1=beko.uwc.local
 

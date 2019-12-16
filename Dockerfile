@@ -6,12 +6,19 @@ COPY cpanfile /src/
 WORKDIR /
 
 RUN apk update && \
-  apk add perl perl-io-socket-ssl perl-dev g++ make wget curl mariadb-connector-c mariadb-connector-c-dev samba-client shadow && \
-  curl -L https://cpanmin.us | perl - App::cpanminus && \
+  apk add perl perl-io-socket-ssl perl-dev g++ make wget curl mariadb-connector-c mariadb-connector-c-dev samba-client shadow
+# && \
+
+RUN curl -L https://cpanmin.us | perl - App::cpanminus && \
   cd /src && \
-  cpanm --installdeps . -M https://cpan.metacpan.org && \
-  groupadd adup && \
+  cpanm --installdeps . -M https://cpan.metacpan.org
+# && \
+
+RUN groupadd adup && \
   useradd -N -g adup -M -d /opt/adup/run -s /sbin/nologin -c "ADUP user" adup && \
+  chmod 777 /var/cache/samba /var/lib/samba && \
+  chown adup:adup /var/lib/samba/* && \
+  chmod u+s /bin/ping && \
   apk del perl-dev g++ wget curl mariadb-connector-c-dev shadow && \
   rm -rf /root/.cpanm/* /usr/local/share/man/* /src/cpanfile
 
@@ -21,7 +28,8 @@ RUN cd /src && \
   sed -ri 's/(\$remote_user\s=\s['\''|"])/###\1/' lib/Adup.pm && \
   perl Makefile.PL && \
   make && \
-  make install
+  make install && \
+  rm -rf /opt/adup/log
 #cd / && rm -rf /src
 
 ENV ADUP_CONFIG /opt/adup/adup.conf
@@ -31,4 +39,5 @@ USER adup:adup
 #VOLUME ["data"]
 EXPOSE 3000
 
-CMD ["perl", "-MMojolicious::Lite", "-E", "get '/' => sub { shift->render(text => 'OK!') }; app->start", "daemon"]
+#CMD ["hypnotoad", "-f", "/opt/adup/script/adup"]
+CMD ["sh"]
