@@ -49,6 +49,7 @@ install::
 	\$(NOECHO) for f in \$\$(find templates -type f); do install -m 0644 -D \"\$\$f\" \$(DESTDIR)$inst_dir/\"\$\$f\"; done
 	\$(NOECHO) if [ \"\$\$(id -u)\" != \"0\" ]; then install -m 0755 -d \$(DESTDIR)$inst_dir/run; else install -o adup -g adup -m 0755 -d \$(DESTDIR)$inst_dir/run; fi
 	\$(NOECHO) if [ \"\$\$(id -u)\" != \"0\" ]; then install -m 0755 -d \$(DESTDIR)$inst_dir/log; else install -o adup -g adup -m 0755 -d \$(DESTDIR)$inst_dir/log; fi
+	\$(NOECHO) if [ \"\$\$(id -u)\" != \"0\" ]; then install -m 0755 -d \$(DESTDIR)$inst_dir/tmp; else install -o adup -g adup -m 0755 -d \$(DESTDIR)$inst_dir/tmp; fi
 
 MAKE_FRAG
 }

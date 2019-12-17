@@ -3,10 +3,8 @@ FROM alpine:3.10
 COPY cpanfile /src/
 #ENV EV_EXTRA_DEFS -DEV_NO_ATFORK
 
-WORKDIR /
-
 RUN apk update && \
-  apk add perl perl-io-socket-ssl perl-dev g++ make wget curl mariadb-connector-c mariadb-connector-c-dev samba-client shadow
+  apk add --no-cache perl perl-io-socket-ssl perl-dev g++ make wget curl mariadb-connector-c mariadb-connector-c-dev samba-client shadow dcron tini
 # && \
 
 RUN curl -L https://cpanmin.us | perl - App::cpanminus && \
@@ -25,19 +23,23 @@ RUN groupadd adup && \
 COPY . /src/
 
 RUN cd /src && \
-  sed -ri 's/(\$remote_user\s=\s['\''|"])/###\1/' lib/Adup.pm && \
+#  sed -ri 's/(\$remote_user\s=\s['\''|"])/###\1/' lib/Adup.pm && \
   perl Makefile.PL && \
   make && \
   make install && \
-  rm -rf /opt/adup/log
-#cd / && rm -rf /src
+  rm -rf /opt/adup/log && \
+  echo > /var/spool/cron/crontabs/root && \
+  cat /src/support/docker-smbload.cron > /var/spool/cron/crontabs/adup && \
+  #echo "* * * * * date" >> /var/spool/cron/crontabs/adup && \
+  cd / && rm -rf /src
+
+WORKDIR /opt/adup
 
 ENV ADUP_CONFIG /opt/adup/adup.conf
 ENV ADUP_PUBLIC /opt/adup/public
 
 USER adup:adup
-#VOLUME ["data"]
+VOLUME ["/opt/adup/tmp"]
 EXPOSE 3000
 
-#CMD ["hypnotoad", "-f", "/opt/adup/script/adup"]
-CMD ["sh"]
+CMD ["sh", "-c", "script/check_db_hosts && hypnotoad -f /opt/adup/script/adup"]
