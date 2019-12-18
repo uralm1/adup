@@ -3,5 +3,7 @@
 docker run -d --name adup-cronsmbload \
   -v /home/sv/src/dock_test/adup.conf:/opt/adup/adup.conf:ro \
   -v adup_tmp:/opt/adup/tmp \
+  -e TZ=Asia/Yekaterinburg \
   -u root:root \
-  uralm1/adup tini -- crond -f -M /bin/true -l 8
+  --init \
+  uralm1/adup crond -f -M /bin/true -l 8

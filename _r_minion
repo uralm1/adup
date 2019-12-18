@@ -4,5 +4,6 @@
 docker run -d --name adup-minion \
   -v /home/sv/src/dock_test/adup.conf:/opt/adup/adup.conf:ro \
   -v adup_tmp:/opt/adup/tmp \
+  -e TZ=Asia/Yekaterinburg \
   --stop-signal SIGINT \
   uralm1/adup sh -c "script/check_db_hosts && script/adup minion worker -m production"

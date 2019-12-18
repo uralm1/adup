@@ -3,5 +3,6 @@
 docker run -d --name adup \
   -v /home/sv/src/dock_test/adup.conf:/opt/adup/adup.conf:ro \
   -v adup_tmp:/opt/adup/tmp \
+  -e TZ=Asia/Yekaterinburg \
   -p 3000:3000 \
   uralm1/adup

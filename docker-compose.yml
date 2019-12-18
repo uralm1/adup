@@ -1,0 +1,67 @@
+version: "3.7"
+services:
+  proxy:
+    image: uralm1/adup-proxy
+    container_name: adup-proxy
+    hostname: adup
+    domainname: uwc.ufanet.ru
+    volumes:
+      - /etc/ssl/certs/uwc.ufanet.ru.pem:/etc/ssl/certs/u.pem:ro
+      - /etc/ssl/private/uwc.ufanet.ru-key.pem:/etc/ssl/private/u.key:ro
+      - public:/opt/adup/public
+    ports:
+      - 444:443
+    environment:
+      - TZ=Asia/Yekaterinburg
+      - PUBLIC_ROOT=/opt/adup/public
+      - PROXY_ADDR=http://adup-app:3000/
+    links:
+      - app:adup-app
+    restart: unless-stopped
+
+  app:
+    image: uralm1/adup
+    container_name: adup
+    volumes:
+      - /home/sv/src/dock_test/adup.conf:/opt/adup/adup.conf:ro
+      - tmp:/opt/adup/tmp
+      - public:/opt/adup/public
+    ports:
+      - 3000:3000
+    environment:
+      - TZ=Asia/Yekaterinburg
+    links:
+      - worker
+    restart: unless-stopped
+
+  worker:
+    image: uralm1/adup
+    container_name: adup-minion
+    volumes:
+      - /home/sv/src/dock_test/adup.conf:/opt/adup/adup.conf:ro
+      - tmp:/opt/adup/tmp
+    environment:
+      - TZ=Asia/Yekaterinburg
+    stop_signal: SIGINT
+    command: sh -c "script/check_db_hosts && script/adup minion worker -m production"
+    restart: unless-stopped
+
+  cronsmbload:
+    image: uralm1/adup
+    container_name: adup-cronsmbload
+    volumes:
+      - /home/sv/src/dock_test/adup.conf:/opt/adup/adup.conf:ro
+      - tmp:/opt/adup/tmp
+    environment:
+      - TZ=Asia/Yekaterinburg
+    user: root:root
+    init: true
+    command: crond -f -M /bin/true -l 8
+    links:
+      - worker
+    restart: unless-stopped
+
+volumes:
+  tmp:
+  public:
+

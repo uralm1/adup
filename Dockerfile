@@ -4,16 +4,15 @@ COPY cpanfile /src/
 #ENV EV_EXTRA_DEFS -DEV_NO_ATFORK
 
 RUN apk update && \
-  apk add --no-cache perl perl-io-socket-ssl perl-dev g++ make wget curl mariadb-connector-c mariadb-connector-c-dev samba-client shadow dcron tini
-# && \
-
-RUN curl -L https://cpanmin.us | perl - App::cpanminus && \
+  apk add --no-cache perl perl-io-socket-ssl perl-dev g++ make wget curl mariadb-connector-c mariadb-connector-c-dev samba-client shadow dcron tzdata && \
+# install perl dependences
+  curl -L https://cpanmin.us | perl - App::cpanminus && \
   cd /src && \
-  cpanm --installdeps . -M https://cpan.metacpan.org
-# && \
-
-RUN groupadd adup && \
+  cpanm --installdeps . -M https://cpan.metacpan.org && \
+# create adup user
+  groupadd adup && \
   useradd -N -g adup -M -d /opt/adup/run -s /sbin/nologin -c "ADUP user" adup && \
+# fix samba
   chmod 777 /var/cache/samba /var/lib/samba && \
   chown adup:adup /var/lib/samba/* && \
 # fix ping to run under user
