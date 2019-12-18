@@ -1,0 +1,11 @@
+#!/bin/bash
+
+# network for wispa host -- vmware hosts must use ipvlan
+#docker network create -d macvlan --subnet=10.0.0.0/10 --gateway=10.15.0.1 --ip-range=10.14.75.32/28 -o parent=eth0 uwcnet
+
+#  -h adup.uwc.ufanet.ru --network uwcnet --ip 10.14.72.4 \
+docker run -d --name adup-proxy \
+  -v /etc/ssl/certs/uwc.ufanet.ru.pem:/etc/ssl/certs/u.pem:ro \
+  -v /etc/ssl/private/uwc.ufanet.ru-key.pem:/etc/ssl/private/u.key:ro \
+  --volumes-from adup \
+  uralm1/adup-proxy
