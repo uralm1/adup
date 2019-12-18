@@ -16,7 +16,9 @@ RUN groupadd adup && \
   useradd -N -g adup -M -d /opt/adup/run -s /sbin/nologin -c "ADUP user" adup && \
   chmod 777 /var/cache/samba /var/lib/samba && \
   chown adup:adup /var/lib/samba/* && \
+# fix ping to run under user
   chmod u+s /bin/ping && \
+# cleanup
   apk del perl-dev g++ wget curl mariadb-connector-c-dev shadow && \
   rm -rf /root/.cpanm/* /usr/local/share/man/* /src/cpanfile
 
@@ -27,7 +29,9 @@ RUN cd /src && \
   perl Makefile.PL && \
   make && \
   make install && \
+# disable logs
   rm -rf /opt/adup/log && \
+# make cron files
   echo > /var/spool/cron/crontabs/root && \
   cat /src/support/docker-smbload.cron > /var/spool/cron/crontabs/adup && \
   #echo "* * * * * date" >> /var/spool/cron/crontabs/adup && \
@@ -36,9 +40,9 @@ RUN cd /src && \
 WORKDIR /opt/adup
 
 ENV ADUP_CONFIG /opt/adup/adup.conf
-ENV ADUP_PUBLIC /opt/adup/public
 
 USER adup:adup
+VOLUME ["/opt/adup/public"]
 VOLUME ["/opt/adup/tmp"]
 EXPOSE 3000
 
