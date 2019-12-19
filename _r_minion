@@ -2,7 +2,7 @@
 
 #docker volume create adup_tmp
 docker run -d --name adup-minion \
-  -v /home/sv/src/dock_test/adup.conf:/opt/adup/adup.conf:ro \
+  -v /home/sv/src/adup_cfg/adup.conf:/opt/adup/adup.conf:ro \
   -v adup_tmp:/opt/adup/tmp \
   -e TZ=Asia/Yekaterinburg \
   --stop-signal SIGINT \

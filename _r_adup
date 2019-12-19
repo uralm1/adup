@@ -1,8 +1,9 @@
 #!/bin/bash
 
 docker run -d --name adup \
-  -v /home/sv/src/dock_test/adup.conf:/opt/adup/adup.conf:ro \
+  -v /home/sv/src/adup_cfg/adup.conf:/opt/adup/adup.conf:ro \
   -v adup_tmp:/opt/adup/tmp \
+  -v adup_public:/opt/adup/public \
   -e TZ=Asia/Yekaterinburg \
   -p 3000:3000 \
   uralm1/adup

@@ -1,5 +1,13 @@
+.dockerignore
 .gitattributes
+_b
+_r_adup
+_r_cronsmbload
+_r_minion
 adup.conf
+cpanfile
+docker-compose.yml
+Dockerfile
 lib/Adup.pm
 lib/Adup/Command/merge.pm
 lib/Adup/Command/preprocess.pm
@@ -88,6 +96,7 @@ support/adup-minion.service
 support/adup.service
 support/adup.sql
 support/adup_site.conf
+support/docker-smbload.cron
 support/smbload.cron
 support/smbload.logrotate
 support/smbload.service

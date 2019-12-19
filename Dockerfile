@@ -41,7 +41,7 @@ WORKDIR /opt/adup
 ENV ADUP_CONFIG /opt/adup/adup.conf
 
 USER adup:adup
-VOLUME ["/opt/adup/public"]
+#VOLUME ["/opt/adup/public"]
 VOLUME ["/opt/adup/tmp"]
 EXPOSE 3000
 
