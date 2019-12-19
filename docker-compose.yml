@@ -5,12 +5,19 @@ services:
     container_name: adup-proxy
     hostname: adup
     domainname: uwc.ufanet.ru
+    networks:
+      uwcnet:
+        ipv4_address: 10.14.72.3
+      default:
+    dns:
+      - 10.14.0.2
+      - 10.14.0.4
+    ports:
+      - 444:443
     volumes:
       - /etc/ssl/certs/uwc.ufanet.ru.pem:/etc/ssl/certs/u.pem:ro
       - /etc/ssl/private/uwc.ufanet.ru-key.pem:/etc/ssl/private/u.key:ro
       - public:/opt/adup/public
-    ports:
-      - 444:443
     environment:
       - TZ=Asia/Yekaterinburg
       - PUBLIC_ROOT=/opt/adup/public
@@ -23,7 +30,7 @@ services:
     image: uralm1/adup
     container_name: adup
     volumes:
-      - /home/sv/src/dock_test/adup.conf:/opt/adup/adup.conf:ro
+      - /srv/adup/adup.conf:/opt/adup/adup.conf:ro
       - tmp:/opt/adup/tmp
       - public:/opt/adup/public
     ports:
@@ -38,7 +45,7 @@ services:
     image: uralm1/adup
     container_name: adup-minion
     volumes:
-      - /home/sv/src/dock_test/adup.conf:/opt/adup/adup.conf:ro
+      - /srv/adup/adup.conf:/opt/adup/adup.conf:ro
       - tmp:/opt/adup/tmp
     environment:
       - TZ=Asia/Yekaterinburg
@@ -50,7 +57,7 @@ services:
     image: uralm1/adup
     container_name: adup-cronsmbload
     volumes:
-      - /home/sv/src/dock_test/adup.conf:/opt/adup/adup.conf:ro
+      - /srv/adup/adup.conf:/opt/adup/adup.conf:ro
       - tmp:/opt/adup/tmp
     environment:
       - TZ=Asia/Yekaterinburg
@@ -64,4 +71,9 @@ services:
 volumes:
   tmp:
   public:
+
+networks:
+  uwcnet:
+    external:
+      name: uwcnet
 
