@@ -24,7 +24,7 @@ RUN apk update && \
 COPY . /src/
 
 RUN cd /src && \
-#  sed -ri 's/(\$remote_user\s=\s['\''|"])/###\1/' lib/Adup.pm && \
+  sed -ri 's/(\$remote_user\s=\s['\''|"])/###\1/' lib/Adup.pm && \
   perl Makefile.PL && \
   make && \
   make install && \
