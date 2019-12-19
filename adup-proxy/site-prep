@@ -1,8 +1,0 @@
-#!/bin/bash
-set -e
-
-# fix site config
-sed -i "s/ServerName .*/ServerName `hostname -f`:443/" /etc/apache2/sites-available/proxy-site.conf
-
-# fix redir html
-sed -i "s/testserver/`hostname -f`/" /var/www/html/index.html
