@@ -9,7 +9,7 @@ use Adup::Command::resettasks;
 use Adup::Ural::UsersCatalog;
 use Adup::Ural::OperatorResolver;
 
-our $VERSION = '1.8';
+our $VERSION = '1.9';
 
 # This method will run once at server start
 sub startup {
