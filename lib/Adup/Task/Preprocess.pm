@@ -27,6 +27,7 @@ sub register {
 sub _process_dbf {
   my ($job, $remote_user) = @_;
 
+  $job->app->log->info("Start preprocess $$: ".$job->id);
   my $db_adup = $job->app->mysql_adup->db;
 
   my $log = Adup::Ural::Dblog->new($db_adup, login=>$remote_user, state=>0);
@@ -233,7 +234,7 @@ sub _process_dbf {
 
   $job->app->reset_task_state($db_adup, $TASK_ID);
 
-  say "finish $$: ".$job->id;
+  $job->app->log->info("Finish $$: ".$job->id);
   $job->finish;
 }
 

@@ -31,6 +31,7 @@ sub register {
 sub _sync {
   my ($job, $remote_user) = @_;
 
+  $job->app->log->info("Start sync $$: ".$job->id);
   my $db_adup = $job->app->mysql_adup->db;
 
   my $log = Adup::Ural::Dblog->new($db_adup, login=>$remote_user, state=>10);
@@ -154,7 +155,7 @@ sub _sync {
   $job->app->reset_task_state($db_adup, $TASK_ID);
   $ldap->unbind;
 
-  say "finish $$: ".$job->id;
+  $job->app->log->info("Finish $$: ".$job->id);
   $job->finish;
 }
 
