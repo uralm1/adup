@@ -131,20 +131,20 @@ sub validate_config {
   my $e = undef;
   for (qw/personnel_ldap_base flatgroups_ldap_base dismissed_ou_dn/) {
     unless ($c->{$_}) {
-      $e = "FATAL ERROR: Config parameter $_ is not defined!";
+      $e = "Config parameter $_ is not defined!";
       last;
     }
   }
   for (qw/user_cleanup_skip_dn ou_cleanup_skip_dn/) {
     if (!$c->{$_} || ref($c->{$_}) ne 'ARRAY') {
-      $e = "FATAL ERROR: Config parameter $_ is not ARRAY!";
+      $e = "Config parameter $_ is not ARRAY!";
       last;
     }
   }
 
   if ($e) {
-    say $e;
-    $self->log->error($e);
+    say $e if $self->log->path;
+    $self->log->fatal($e);
     return undef;
   }
   1;

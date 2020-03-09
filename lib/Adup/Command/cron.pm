@@ -5,59 +5,61 @@ use Carp;
 use Mojo::IOLoop;
 use Mojo::Log;
 use Algorithm::Cron;
-use Data::Dumper;
 
-has description => 'Run builtin cron agent';
+has description => '* Run builtin internal scheduler';
 has usage => "Usage: APPLICATION cron\n";
 
 sub run {
   my $self = shift;
   my $app = $self->app;
-  my $log = Mojo::Log->new;
+  my $log = $app->log;
 
   binmode(STDOUT, ':utf8');
   #binmode(STDERR, ':utf8');
 
-  $log->info("start!");
   my $sh = $app->config('smbload_schedules');
-  #ref $sh;
+  if (!$sh || ref($sh) ne 'ARRAY' || !@$sh) {
+    $log->info('Config parameter smbload_schedules is undefined or empty. Scheduler process will exit.');
+    return 0;
+  }
+
+  $log->info("Internal scheduler process started.");
 
   # use new special IOLoop
   my $loop = Mojo::IOLoop->new;
   local $SIG{INT} = local $SIG{TERM} = sub { $loop->stop };
 
   $loop->next_tick(sub { 
-    #$self->_cron($loop, $_, $log) for ("*/2 * * * *", "20 */3 * * * *");
-    $self->_cron($loop, $_, $log) for ("*/2 * * * *");
+    $self->_cron($loop, $_, $log) for (@$sh);
   });
 
   $loop->start;
-  $log->info("end!");
+  $log->info("Internal scheduler finished.");
 }
 
 sub _cron() {
   my ($self, $loop, $sh, $log) = @_;
-  say "in _cron($sh)!";
+  #say "in _cron($sh)!";
 
   my $cron = Algorithm::Cron->new(
     base => 'local',
     crontab => $sh,
   );
+  $log->info("Schedule \"$sh\" active.");
 
   my $time = time;
   # $cron, $time goes to closure
   my $task;
   $task = sub {
     $time = $cron->next_time($time);
-    if ($time - time <= 0) {
-      say "Time diff negative!!!";
+    while ($time - time <= 0) {
+      #say "Time diff negative!";
       $time = $cron->next_time($time);
-      if ($time - time <= 0) {say "Time diff negative 2!!!";}
     }
     $loop->timer(($time - time) => sub { 
-      $log->info("CRON EVENT start!");
-      sleep(180);
-      $log->info("CRON EVENT end!");
+      $log->info("EVENT from schedule \"$sh\" started.");
+      $self->app->commands->run('smbload');
+      $log->info("EVENT from schedule \"$sh\" finished.");
       $task->();
     });
   };
