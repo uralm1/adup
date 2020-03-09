@@ -10,6 +10,7 @@ requires 'MIME::Base64';
 requires 'Digest::SHA';
 requires 'DateTime';
 requires 'DateTime::Format::MySQL';
+requires 'Algorithm::Cron', '0.10';
 requires 'ExtUtils::MakeMaker::CPANfile';
 
 on 'configure' => sub {

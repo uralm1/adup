@@ -12,8 +12,6 @@ services:
     dns:
       - 10.14.0.2
       - 10.14.0.4
-    ports:
-      - 444:443
     volumes:
       - /etc/ssl/certs/uwc.ufanet.ru.pem:/etc/ssl/certs/u.pem:ro
       - /etc/ssl/private/uwc.ufanet.ru-key.pem:/etc/ssl/private/u.key:ro
@@ -33,8 +31,6 @@ services:
       - /srv/adup/adup.conf:/opt/adup/adup.conf:ro
       - tmp:/opt/adup/tmp
       - public:/opt/adup/public
-    ports:
-      - 3000:3000
     environment:
       - TZ=Asia/Yekaterinburg
     links:

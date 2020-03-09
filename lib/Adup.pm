@@ -1,15 +1,16 @@
 package Adup;
 use Mojo::Base 'Mojolicious';
 
-use Adup::Command::smbload;
 use Adup::Command::preprocess;
 use Adup::Command::sync;
 use Adup::Command::merge;
 use Adup::Command::resettasks;
+use Adup::Command::smbload;
+use Adup::Command::cron;
 use Adup::Ural::UsersCatalog;
 use Adup::Ural::OperatorResolver;
 
-our $VERSION = '1.9';
+our $VERSION = '1.10';
 
 # This method will run once at server start
 sub startup {
@@ -27,6 +28,8 @@ sub startup {
   $self->secrets($config->{secrets});
   $self->sessions->cookie_name('adup');
   $self->sessions->default_expiration(0);
+
+  exit 1 unless $self->validate_config;
 
   # upload file limit 16mb
   $self->max_request_size(16777216);
@@ -118,6 +121,33 @@ sub startup {
   $r->post('/photo/cam')->to('setattrphoto#campost');
 
   $r->get('/comp')->to('comp#comp');
+}
+
+
+sub validate_config {
+  my $self = shift;
+  my $c = $self->config;
+
+  my $e = undef;
+  for (qw/personnel_ldap_base flatgroups_ldap_base dismissed_ou_dn/) {
+    unless ($c->{$_}) {
+      $e = "FATAL ERROR: Config parameter $_ is not defined!";
+      last;
+    }
+  }
+  for (qw/user_cleanup_skip_dn ou_cleanup_skip_dn/) {
+    if (!$c->{$_} || ref($c->{$_}) ne 'ARRAY') {
+      $e = "FATAL ERROR: Config parameter $_ is not ARRAY!";
+      last;
+    }
+  }
+
+  if ($e) {
+    say $e;
+    $self->log->error($e);
+    return undef;
+  }
+  1;
 }
 
 
