@@ -1,3 +1,0 @@
-# alpine linux dcron version (goes to /var/spool/cron/crontabs/adup file)
-# load from smb share
-3 21 * * * /opt/adup/script/adup smbload

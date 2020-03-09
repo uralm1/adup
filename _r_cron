@@ -1,9 +1,7 @@
 #!/bin/bash
 
-docker run -d --name adup-cronsmbload \
+docker run -d --name adup-cron \
   -v /srv/adup/adup.conf:/opt/adup/adup.conf:ro \
   -v adup_tmp:/opt/adup/tmp \
   -e TZ=Asia/Yekaterinburg \
-  -u root:root \
-  --init \
-  uralm1/adup crond -f -M /bin/true -l 8
+  uralm1/adup sh -c "script/check_db_hosts && script/adup cron -m production"

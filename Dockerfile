@@ -4,7 +4,7 @@ COPY cpanfile /src/
 #ENV EV_EXTRA_DEFS -DEV_NO_ATFORK
 
 RUN apk update && \
-  apk add --no-cache perl perl-io-socket-ssl perl-dev g++ make wget curl mariadb-connector-c mariadb-connector-c-dev samba-client shadow dcron tzdata patch && \
+  apk add --no-cache perl perl-io-socket-ssl perl-dev g++ make wget curl mariadb-connector-c mariadb-connector-c-dev samba-client shadow tzdata patch && \
 # install perl dependences
   curl -L https://cpanmin.us | perl - App::cpanminus && \
   cd /src && \
@@ -30,10 +30,6 @@ RUN cd /src && \
   make install && \
 # disable logs
   rm -rf /opt/adup/log && \
-# make cron files
-  echo > /var/spool/cron/crontabs/root && \
-  cat /src/support/docker-smbload.cron > /var/spool/cron/crontabs/adup && \
-  #echo "* * * * * date" >> /var/spool/cron/crontabs/adup && \
   cd / && rm -rf /src
 
 WORKDIR /opt/adup
