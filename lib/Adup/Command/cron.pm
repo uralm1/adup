@@ -30,7 +30,7 @@ sub run {
   local $SIG{INT} = local $SIG{TERM} = sub { $loop->stop };
 
   $loop->next_tick(sub { 
-    $self->_cron($loop, $_, $log) for (@$sh);
+    $self->_cron($loop, $_) for (@$sh);
   });
 
   $loop->start;
@@ -38,7 +38,8 @@ sub run {
 }
 
 sub _cron() {
-  my ($self, $loop, $sh, $log) = @_;
+  my ($self, $loop, $sh) = @_;
+  my $log = $self->app->log;
   #say "in _cron($sh)!";
 
   my $cron = Algorithm::Cron->new(
