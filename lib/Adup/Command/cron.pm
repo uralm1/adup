@@ -30,7 +30,7 @@ sub run {
   local $SIG{INT} = local $SIG{TERM} = sub { $loop->stop };
 
   $loop->next_tick(sub { 
-    $self->_cron($loop, $_) for (@$sh);
+    $self->_cron($loop, $sh, $_) for (0 .. $#$sh);
   });
 
   $loop->start;
@@ -38,15 +38,16 @@ sub run {
 }
 
 sub _cron() {
-  my ($self, $loop, $sh) = @_;
+  my ($self, $loop, $sh, $idx) = @_;
   my $log = $self->app->log;
-  #say "in _cron($sh)!";
+  my $crontab = $sh->[$idx];
+  carp 'Bad crontab' unless $crontab;
 
   my $cron = Algorithm::Cron->new(
     base => 'local',
-    crontab => $sh,
+    crontab => $crontab,
   );
-  $log->info("Schedule \"$sh\" active.");
+  $log->info("Schedule ($idx: \"$crontab\") active.");
 
   my $time = time;
   # $cron, $time goes to closure
@@ -58,9 +59,10 @@ sub _cron() {
       $time = $cron->next_time($time);
     }
     $loop->timer(($time - time) => sub { 
-      $log->info("EVENT from schedule \"$sh\" started.");
-      $self->app->commands->run('smbload');
-      $log->info("EVENT from schedule \"$sh\" finished.");
+      $log->info("EVENT from schedule ($idx) started.");
+      my $e = eval { $self->app->commands->run('smbload') };
+      my $es = (defined $e) ? "code: $e":"with error: $@";
+      $log->info("EVENT from schedule ($idx) finished $es.");
       $task->();
     });
   };
