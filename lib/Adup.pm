@@ -10,7 +10,7 @@ use Adup::Command::cron;
 use Adup::Ural::UsersCatalog;
 use Adup::Ural::OperatorResolver;
 
-our $VERSION = '1.11';
+our $VERSION = '1.13';
 
 # This method will run once at server start
 sub startup {

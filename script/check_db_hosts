@@ -13,4 +13,7 @@ do
   #echo -n "$cc "
   sleep 2
 done
+
+[ -e /opt/adup/run/hypnotoad.pid ] && { echo "Removing stalled hypnotoad.pid file."; rm -f /opt/adup/run/hypnotoad.pid; }
+
 echo "All OK"
