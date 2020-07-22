@@ -58,7 +58,8 @@ sub postamble {
   return <<'MAKE_FRAG';
 all::
 	$(NOECHO) $(ECHO) "** Checking..."
-	$(NOECHO) if grep -q -e "^\s*\$$remote_user = ['|\"]" lib/Adup.pm ; then echo "WARNING! DEBUG ENTRY AUTHORIZATION CODE in Adup.pm IS NOT DISABLED!!!"; fi
+	$(NOECHO) if grep -q -e "^\s*\$$self->plugin(['|\"]Minion::Admin['|\"]);" lib/Adup.pm ; then echo "\nWARNING! DEBUG MINION ADMIN PAGE in Adup.pm IS NOT DISABLED!!!\n"; fi
+	$(NOECHO) if grep -q -e "^\s*\$$remote_user = ['|\"]" lib/Adup.pm ; then echo "\nWARNING! DEBUG ENTRY AUTHORIZATION CODE in Adup.pm IS NOT DISABLED!!!\n"; fi
 
 MAKE_FRAG
 }
