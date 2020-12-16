@@ -28,8 +28,10 @@ WriteMakefile(
   #PMLIBDIRS => ['lib'],
   #PM => {
   #  'lib/Adup.pm' => '$(INST_LIB)/Adup.pm',
-  #  'script/adup' => '$(INST_SCRIPT)/adup',
   #},
+  INSTALLSCRIPT => "$inst_dir/script",
+  INSTALLSITESCRIPT => "$inst_dir/script",
+  EXE_FILES => ['script/adup', 'script/check_db_hosts', 'script/smbload'],
   MAN1PODS => {},
   MAN3PODS => {},
 );
@@ -40,9 +42,7 @@ sub install {
   return $inherited.<<"MAKE_FRAG";
 install::
 	\$(NOECHO) \$(ECHO) "** Installing configuration, public and templates files..."
-	\$(NOECHO) install -m 0644 adup.conf \$(DESTDIR)$inst_dir
-	\$(NOECHO) install -m 0755 -d \$(DESTDIR)$inst_dir/script
-	\$(NOECHO) install -D script/* \$(DESTDIR)$inst_dir/script
+	\$(NOECHO) install -m 0644 adup.conf_empty \$(DESTDIR)$inst_dir/adup.conf
 	\$(NOECHO) for d in \$\$(find public -type d); do install -m 0755 -d \$(DESTDIR)$inst_dir/\"\$\$d\"; done
 	\$(NOECHO) for f in \$\$(find public -type f); do install -m 0644 -D \"\$\$f\" \$(DESTDIR)$inst_dir/\"\$\$f\"; done
 	\$(NOECHO) for d in \$\$(find templates -type d); do install -m 0755 -d \$(DESTDIR)$inst_dir/\"\$\$d\"; done

@@ -4,8 +4,8 @@ _b
 _r_adup
 _r_cron
 _r_minion
-adup.conf
 adup.conf__
+adup.conf_empty
 cpanfile
 docker-compose.yml
 Dockerfile
@@ -98,7 +98,6 @@ support/adup-minion.service
 support/adup.service
 support/adup.sql
 support/adup_site.conf
-support/docker-smbload.cron
 support/smbload.cron
 support/smbload.logrotate
 support/smbload.service
