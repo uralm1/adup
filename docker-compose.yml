@@ -46,7 +46,7 @@ services:
     environment:
       - TZ=Asia/Yekaterinburg
     stop_signal: SIGINT
-    command: sh -c "script/check_db_hosts && script/adup minion worker -m production"
+    command: sh -c "script/check_db_hosts && script/adup minion worker -m production -j 1"
     restart: unless-stopped
 
   cron:
