@@ -40,6 +40,7 @@ sub startup {
 
   $self->plugin('Adup::Plugin::MPagenav');
   $self->plugin('Adup::Plugin::Utils');
+  $self->plugin('Adup::Plugin::Migrations');
 
   $self->plugin('Adup::Task::Preprocess');
   $self->plugin('Adup::Task::Sync');
@@ -47,6 +48,9 @@ sub startup {
   push @{$self->commands->namespaces}, 'Adup::Command';
 
   $self->defaults(version => $VERSION);
+
+  # update database
+  $self->migrate_database;
 
   $self->defaults(uc => Adup::Ural::UsersCatalog->new($self->mysql_adup));
   unless ($self->defaults('uc')) {
