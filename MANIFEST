@@ -4,7 +4,6 @@ _b
 _r_adup
 _r_cron
 _r_minion
-adup.conf__
 adup.conf_empty
 cpanfile
 docker-compose.yml
@@ -93,6 +92,7 @@ README.md
 script/adup
 script/check_db_hosts
 script/smbload
+script/start_server
 support/_i
 support/adup-minion.service
 support/adup.service
@@ -156,4 +156,4 @@ templates/sync/approve.html.ep
 templates/sync/index.html.ep
 templates/sync/mergearchive.html.ep
 templates/upload/index.html.ep
-test.conf
+test.conf_empty

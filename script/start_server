@@ -8,4 +8,4 @@ use lib curfile->dirname->sibling('lib')->to_string;
 use Mojolicious::Commands;
 
 # Start command line interface for application
-Mojolicious::Commands->start_app('Adup');
+Mojolicious::Commands->start_app('Adup', 'prefork', '-l', 'http://*:3000', '-p', '-P', '/opt/adup/run/prefork.pid');

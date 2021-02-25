@@ -31,7 +31,7 @@ WriteMakefile(
   #},
   INSTALLSCRIPT => "$inst_dir/script",
   INSTALLSITESCRIPT => "$inst_dir/script",
-  EXE_FILES => ['script/adup', 'script/check_db_hosts', 'script/smbload'],
+  EXE_FILES => ['script/adup', 'script/start_server', 'script/check_db_hosts', 'script/smbload'],
   MAN1PODS => {},
   MAN3PODS => {},
 );

@@ -41,4 +41,5 @@ USER adup:adup
 VOLUME ["/opt/adup/tmp"]
 EXPOSE 3000
 
-CMD ["sh", "-c", "script/check_db_hosts && hypnotoad -f /opt/adup/script/adup"]
+#CMD ["sh", "-c", "script/check_db_hosts && hypnotoad -f /opt/adup/script/adup"]
+CMD ["sh", "-c", "script/check_db_hosts && script/start_server"]
