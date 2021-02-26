@@ -27,7 +27,7 @@ sub index {
       WHERE state = 0 \
       ORDER BY date DESC LIMIT 1");
     if (my $lh = $log_rec->hash) {
-      $last_upload = "$lh->{login} $lh->{fdate}"; 
+      $last_upload = "$lh->{login} $lh->{fdate}";
     } else {
       $last_upload = 'нет данных';
     }
@@ -54,7 +54,7 @@ sub index {
       login, state, info \
       FROM op_log \
       WHERE state IN (10, 11, 90, 91) \
-      ORDER BY date DESC LIMIT ? OFFSET ?", 
+      ORDER BY date DESC LIMIT ? OFFSET ?",
       $lines_on_page, ($log_active_page - 1)*$lines_on_page
     );
   };
@@ -109,17 +109,13 @@ sub check {
   if ($task_id == 0) {
     $self->session(stid => 0) if defined $self->session('stid');
   } else {
-    $self->log->debug("BEFORE getting job");
     if (my $j = $self->minion->job($task_id)) {
-      $self->log->debug("BEFORE progress and info");
       $progress = $j->info->{notes}{progress};
       $info = $j->info->{notes}{info};
-      $self->log->debug("AFTER progress and info");
     }
     $progress = 0 unless defined $progress;
     $info = '' unless defined $info;
   }
-  $self->log->debug("BEFORE render json");
   $self->render(json => {stid => $task_id, progress => $progress, info => $info}, status => 200);
 }
 
