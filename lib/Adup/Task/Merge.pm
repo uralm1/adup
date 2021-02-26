@@ -6,7 +6,7 @@ use POSIX qw(ceil);
 use Mojo::mysql;
 use Net::LDAP qw(LDAP_SUCCESS LDAP_INSUFFICIENT_ACCESS);
 use Net::LDAP::Util qw(canonical_dn);
-use Encode qw(decode);
+use Encode qw(encode_utf8 decode);
 #use Data::Dumper;
 use Adup::Ural::ChangeFactory;
 use Adup::Ural::Change;
@@ -123,7 +123,8 @@ sub _merge {
 	my $percent = ceil($changes_count / $changes_total * 100);
         $job->note(
 	  progress => $percent,
-	  info => "$percent% Выполняется изменение-$seq_el->{desc}",
+          # mysql minion backend bug workaround
+	  info => encode_utf8("$percent% Выполняется изменение-$seq_el->{desc}"),
 	);
       }
     }

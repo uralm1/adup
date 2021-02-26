@@ -109,13 +109,17 @@ sub check {
   if ($task_id == 0) {
     $self->session(stid => 0) if defined $self->session('stid');
   } else {
+    $self->log->debug("BEFORE getting job");
     if (my $j = $self->minion->job($task_id)) {
+      $self->log->debug("BEFORE progress and info");
       $progress = $j->info->{notes}{progress};
       $info = $j->info->{notes}{info};
+      $self->log->debug("AFTER progress and info");
     }
     $progress = 0 unless defined $progress;
     $info = '' unless defined $info;
   }
+  $self->log->debug("BEFORE render json");
   $self->render(json => {stid => $task_id, progress => $progress, info => $info}, status => 200);
 }
 

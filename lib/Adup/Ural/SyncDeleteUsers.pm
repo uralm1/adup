@@ -7,7 +7,7 @@ use Mojo::mysql;
 use Net::LDAP qw(LDAP_SUCCESS LDAP_INSUFFICIENT_ACCESS LDAP_NO_SUCH_OBJECT LDAP_SIZELIMIT_EXCEEDED LDAP_CONTROL_PAGED);
 use Net::LDAP::Util qw(canonical_dn escape_filter_value escape_dn_value);
 use Net::LDAP::Control::Paged;
-use Encode qw(decode_utf8);
+use Encode qw(encode_utf8 decode_utf8);
 #use Data::Dumper;
 use Adup::Ural::ChangeUserDelete;
 use Adup::Ural::ChangeError;
@@ -128,7 +128,8 @@ sub do_sync {
           my $percent = ceil($entry_count / $entries_total * 100);
           $args{job}->note(
 	    progress => $percent,
-	    info => "$percent% Завершающая синхронизация уволенных пользователей",
+            # mysql minion backend bug workaround
+	    info => encode_utf8("$percent% Завершающая синхронизация уволенных пользователей"),
           );
         }
       }

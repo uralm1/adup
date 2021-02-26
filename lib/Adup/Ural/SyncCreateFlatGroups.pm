@@ -6,7 +6,7 @@ use POSIX qw(ceil);
 use Mojo::mysql;
 use Net::LDAP qw(LDAP_SUCCESS LDAP_INSUFFICIENT_ACCESS LDAP_NO_SUCH_OBJECT);
 use Net::LDAP::Util qw(canonical_dn escape_filter_value escape_dn_value);
-use Encode qw(decode);
+use Encode qw(encode_utf8 decode);
 #use Data::Dumper;
 use Adup::Ural::ChangeFlatGroupCreate;
 use Adup::Ural::ChangeFlatGroupModify;
@@ -110,7 +110,8 @@ sub do_sync {
       my $percent = ceil($line_count / $lines_total * 100);
       $args{job}->note(
 	progress => $percent,
-	info => "$percent% Синхронизация групп почтового справочника",
+        # mysql minion backend bug workaround
+	info => encode_utf8("$percent% Синхронизация групп почтового справочника"),
       );
     }
   }
