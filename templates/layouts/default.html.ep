@@ -7,7 +7,7 @@
   <title>Обновление глобального каталога</title>
   <link rel="shortcut icon" href="/img/favicon.ico">
   <!--link rel="stylesheet" href="/css/fonts-roboto.css"-->
-  <link rel="stylesheet" href="/css/materialize.min.css">
+  <link rel="stylesheet" href="/css/materialize.min.css?v=101">
   <link rel="stylesheet" href="/css/material-icons.css">
   <link rel="stylesheet" href="/css/styles.css?v=130">
 </head>
@@ -43,7 +43,7 @@
     </div>
   </footer>
   <script src="/js/jquery-3.4.1.min.js"></script>
-  <script src="/js/materialize.min.js"></script>
+  <script src="/js/materialize.min.js?v=101"></script>
 % if ($newversion) {
 <script>$(document).ready(function(){$('#newversion-modal').modal();$('#newversion-modal').modal('open');});</script>
 % }
