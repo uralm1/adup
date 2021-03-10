@@ -19,26 +19,27 @@ sub run {
 
   my $sh = $app->config('smbload_schedules');
   if (!$sh || ref($sh) ne 'ARRAY' || !@$sh) {
-    $log->info('Config parameter smbload_schedules is undefined or empty. Scheduler process will exit.');
+    $log->warn('Config parameter smbload_schedules is undefined or empty. Scheduler process will exit.');
     return 0;
   }
 
   $log->info("Internal scheduler process started.");
 
-  # use new special IOLoop
-  my $loop = Mojo::IOLoop->new;
-  local $SIG{INT} = local $SIG{TERM} = sub { $loop->stop };
+  # use Poll reactor to catch signals, or we have to cal EV::Signal to install signals into EV
+  Mojo::IOLoop->singleton->reactor(Mojo::Reactor::Poll->new);
 
-  $loop->next_tick(sub { 
-    $self->_cron($loop, $sh, $_) for (0 .. $#$sh);
+  local $SIG{INT} = local $SIG{TERM} = sub { Mojo::IOLoop->stop };
+
+  Mojo::IOLoop->next_tick(sub {
+    $self->_cron($sh, $_) for (0 .. $#$sh);
   });
 
-  $loop->start;
+  Mojo::IOLoop->start unless Mojo::IOLoop->is_running;
   $log->info("Internal scheduler finished.");
 }
 
 sub _cron() {
-  my ($self, $loop, $sh, $idx) = @_;
+  my ($self, $sh, $idx) = @_;
   my $log = $self->app->log;
   my $crontab = $sh->[$idx];
   carp 'Bad crontab' unless $crontab;
@@ -58,7 +59,7 @@ sub _cron() {
       #say "Time diff negative!";
       $time = $cron->next_time($time);
     }
-    $loop->timer(($time - time) => sub { 
+    Mojo::IOLoop->timer(($time - time) => sub {
       $log->info("EVENT from schedule ($idx) started.");
       my $e = eval { $self->app->commands->run('smbload') };
       my $es = (defined $e) ? "code: $e":"with error: $@";
