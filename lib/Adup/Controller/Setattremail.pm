@@ -28,13 +28,13 @@ sub email {
       carp "LDAP bind error ".$mesg->error;
       return $self->render(text => "Произошла ошибка авторизации при подключении к глобальному каталогу.");
     }
-    
+
     #search ldap
     my $esc_search = escape_filter_value($search).'*'; #security filtering
     my $filter = "(&(objectCategory=person)(|(objectClass=user)(objectClass=contact))(|(cn=$esc_search)(sAMAccountName=$esc_search)))";
     my $res = $ldap->search(base => $self->config->{personnel_ldap_base}, scope => 'sub',
       filter => $filter,
-      attrs => ['displayName', 'title', 'department', 
+      attrs => ['displayName', 'title', 'department',
 	'sAMAccountName', 'userAccountControl', 'mail'],
       sizelimit => 5
     );
@@ -46,8 +46,8 @@ sub email {
     #my $count = $res->count; say "found: $count";
     my $i = 0;
     $res_tab = [];
-    foreach my $entry ($res->entries) { 
-      #$entry->dump; 
+    foreach my $entry ($res->entries) {
+      #$entry->dump;
       my $uac = $entry->get_value('userAccountControl') || 0x200;
       push @$res_tab, { dn => $entry->dn, # we assume dn to be octets string
 	cn => decode('utf-8', $entry->get_value('displayName')),
@@ -57,7 +57,7 @@ sub email {
 	login => lc decode('utf-8', $entry->get_value('sAMAccountName')),
 	email => decode('utf-8', $entry->get_value('mail')),
       };
-      last if ++$i >= 5; 
+      last if ++$i >= 5;
     }
 
     $ldap->unbind;
@@ -81,14 +81,14 @@ sub emailpost {
   return $self->redirect_to('email') unless ($v->has_data);
 
   my $search = $v->optional('s')->param || '';
- 
+
   my $seldn = $v->required('ug')->param;
   if ($v->is_valid) { # check ug
     $seldn = decode_base64url($seldn, 1);
     #say "DN: $seldn";
 
     # max attribute length is 64
-    my $email = $v->optional('email', 'trim')->like(qr/^.{1,64}$/)->param;
+    my $email = $v->optional('email', 'not_empty', 'trim')->size(1, 64)->param;
 
     unless ($v->has_error) {
       #say "email: $email";
@@ -113,7 +113,7 @@ sub emailpost {
 	  # mail
 	  my $oldemail = $entry->get_value('mail');
 	  my $do_update;
-	  if (defined $email) {
+          if (defined($email) && $email ne '') {
 	    $entry->replace(mail => $email);
 	    $do_update = 1;
 	  } else {

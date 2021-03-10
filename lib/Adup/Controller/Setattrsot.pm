@@ -31,13 +31,13 @@ sub sot {
       carp "LDAP bind error ".$mesg->error;
       return $self->render(text => "Произошла ошибка авторизации при подключении к глобальному каталогу.");
     }
-    
+
     #search ldap
     my $esc_search = escape_filter_value($search).'*'; #security filtering
     my $filter = "(&(objectCategory=person)(|(objectClass=user)(objectClass=contact))(cn=$esc_search))";
     my $res = $ldap->search(base => $self->config->{personnel_ldap_base}, scope => 'sub',
       filter => $filter,
-      attrs => ['displayName', 'title', 'department', 
+      attrs => ['displayName', 'title', 'department',
 	'userAccountControl', 'mobile', 'otherMobile'],
       sizelimit => 5
     );
@@ -49,8 +49,8 @@ sub sot {
     #my $count = $res->count; say "found: $count";
     my $i = 0;
     $res_tab = [];
-    foreach my $entry ($res->entries) { 
-      #$entry->dump; 
+    foreach my $entry ($res->entries) {
+      #$entry->dump;
       my $uac = $entry->get_value('userAccountControl') || 0x200;
 
       push @$res_tab, { dn => $entry->dn, # we assume dn to be octets string
@@ -60,7 +60,7 @@ sub sot {
 	department => decode('utf-8', $entry->get_value('department')),
 	mobiles => join(', ', ldapattrs2list($entry, 'mobile', 'otherMobile')),
       };
-      last if ++$i >= 5; 
+      last if ++$i >= 5;
     }
 
     $ldap->unbind;
@@ -84,15 +84,15 @@ sub sotpost {
   return $self->redirect_to('sot') unless ($v->has_data);
 
   my $search = $v->optional('s')->param || '';
- 
+
   my $seldn = $v->required('ug')->param;
   if ($v->is_valid) { # check ug
     $seldn = decode_base64url($seldn, 1);
     #say "DN: $seldn";
 
     # max attribute length is 64, we restrict to 22
-    my $m1 = $v->optional('mobile1', 'trim')->like(qr/^\+?[0-9()\- ]{4,22}$/)->param;
-    my $m2 = $v->optional('mobile2', 'trim')->like(qr/^\+?[0-9()\- ]{4,22}$/)->param;
+    my $m1 = $v->optional('mobile1', 'not_empty', 'trim')->like(qr/^\+?[0-9()\- ]{4,22}$/)->param;
+    my $m2 = $v->optional('mobile2', 'not_empty', 'trim')->like(qr/^\+?[0-9()\- ]{4,22}$/)->param;
 
     unless ($v->has_error) {
       #say "mobile1: $m1";

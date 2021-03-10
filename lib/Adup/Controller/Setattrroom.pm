@@ -31,13 +31,13 @@ sub room {
       carp "LDAP bind error ".$mesg->error;
       return $self->render(text => "Произошла ошибка авторизации при подключении к глобальному каталогу.");
     }
-    
+
     #search ldap
     my $esc_search = escape_filter_value($search).'*'; #security filtering
     my $filter = "(&(objectCategory=person)(|(objectClass=user)(objectClass=contact))(cn=$esc_search))";
     my $res = $ldap->search(base => $self->config->{personnel_ldap_base}, scope => 'sub',
       filter => $filter,
-      attrs => ['displayName', 'title', 'department', 
+      attrs => ['displayName', 'title', 'department',
 	'userAccountControl', 'physicalDeliveryOfficeName',
 	'telephoneNumber', 'otherTelephone',
 	'pager', 'otherPager',
@@ -53,8 +53,8 @@ sub room {
     #my $count = $res->count; say "found: $count";
     my $i = 0;
     $res_tab = [];
-    foreach my $entry ($res->entries) { 
-      #$entry->dump; 
+    foreach my $entry ($res->entries) {
+      #$entry->dump;
       my $uac = $entry->get_value('userAccountControl') || 0x200;
       # build list of phones
       my @phones = ldapattrs2list($entry, 'telephoneNumber', 'otherTelephone');
@@ -70,7 +70,7 @@ sub room {
 	pagers => join(', ', ldapattrs2list($entry, 'pager', 'otherPager')),
 	faxes => join(', ', ldapattrs2list($entry, 'facsimileTelephoneNumber', 'otherFacsimileTelephoneNumber')),
       };
-      last if ++$i >= 5; 
+      last if ++$i >= 5;
     }
 
     $ldap->unbind;
@@ -100,17 +100,17 @@ sub roompost {
     $seldn = decode_base64url($seldn, 1);
     #say "DN: $seldn";
 
-    my $room = $v->optional('room', 'trim')->like(qr/^.{1,64}$/)->param;
-    my $phonevn1 = $v->optional('phonevn1', 'trim')->like(qr/^\d{4}$/)->param;
-    my $phonevn2 = $v->optional('phonevn2', 'trim')->like(qr/^\d{4}$/)->param;
-    my $phonevn3 = $v->optional('phonevn3', 'trim')->like(qr/^\d{4}$/)->param;
-    my $phonegor1 = $v->optional('phonegor1', 'trim')->like(qr/^\+?[0-9()\- ]{7,22}$/)->param;
-    my $phonegor2 = $v->optional('phonegor2', 'trim')->like(qr/^\+?[0-9()\- ]{7,22}$/)->param;
-    my $phonegor3 = $v->optional('phonegor3', 'trim')->like(qr/^\+?[0-9()\- ]{7,22}$/)->param;
-    my $mkan1 = $v->optional('mkan1', 'trim')->like(qr/^\+?[0-9()\- ]{7,22}$/)->param;
-    my $mkan2 = $v->optional('mkan2', 'trim')->like(qr/^\+?[0-9()\- ]{7,22}$/)->param;
-    my $fax1 = $v->optional('fax1', 'trim')->like(qr/^\+?[0-9()\- ]{7,22}$/)->param;
-    my $fax2 = $v->optional('fax2', 'trim')->like(qr/^\+?[0-9()\- ]{7,22}$/)->param;
+    my $room = $v->optional('room', 'not_empty', 'trim')->like(qr/^.{1,64}$/)->param;
+    my $phonevn1 = $v->optional('phonevn1', 'not_empty', 'trim')->like(qr/^\d{4}$/)->param;
+    my $phonevn2 = $v->optional('phonevn2', 'not_empty', 'trim')->like(qr/^\d{4}$/)->param;
+    my $phonevn3 = $v->optional('phonevn3', 'not_empty', 'trim')->like(qr/^\d{4}$/)->param;
+    my $phonegor1 = $v->optional('phonegor1', 'not_empty', 'trim')->like(qr/^\+?[0-9()\- ]{7,22}$/)->param;
+    my $phonegor2 = $v->optional('phonegor2', 'not_empty', 'trim')->like(qr/^\+?[0-9()\- ]{7,22}$/)->param;
+    my $phonegor3 = $v->optional('phonegor3', 'not_empty', 'trim')->like(qr/^\+?[0-9()\- ]{7,22}$/)->param;
+    my $mkan1 = $v->optional('mkan1', 'not_empty', 'trim')->like(qr/^\+?[0-9()\- ]{7,22}$/)->param;
+    my $mkan2 = $v->optional('mkan2', 'not_empty', 'trim')->like(qr/^\+?[0-9()\- ]{7,22}$/)->param;
+    my $fax1 = $v->optional('fax1', 'not_empty', 'trim')->like(qr/^\+?[0-9()\- ]{7,22}$/)->param;
+    my $fax2 = $v->optional('fax2', 'not_empty', 'trim')->like(qr/^\+?[0-9()\- ]{7,22}$/)->param;
 
     unless ($v->has_error) {
       #say "room: $room, phonevn1: $phonevn1, fax1: $fax1";
