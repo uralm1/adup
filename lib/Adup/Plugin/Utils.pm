@@ -6,15 +6,23 @@ use Mojo::mysql;
 use Mojo::Util qw(xml_escape);
 
 use Adup::Ural::Changelog;
+use Adup::Ural::UsersCatalog;
+use Adup::Ural::OperatorResolver;
 
 
 sub register {
   my ( $self, $app, $args ) = @_;
   $args ||= {};
 
-  # database object
-  $app->helper(mysql_adup => sub { 
+  # database singleton object
+  $app->helper(mysql_adup => sub {
     state $mysql_adup = Mojo::mysql->new(shift->config('adup_db_conn'));
+  });
+
+  # users catalog singleton object
+  $app->helper(users_catalog => sub {
+    state $uc = Adup::Ural::UsersCatalog->new(shift->mysql_adup) or
+      die "Fatal error: Users catalog creation error!";
   });
 
   # return undef unless $self->authorize({ admin=>1, gala=>1 });
@@ -34,19 +42,19 @@ sub register {
   });
 
 
-  # $self->exists_and_number($value) 
+  # $self->exists_and_number($value)
   # renders error if not number
-  $app->helper(exists_and_number => sub { 
+  $app->helper(exists_and_number => sub {
     my ($self, $v) = @_;
     unless (defined($v) && $v =~ /^\d+$/) {
       $self->render(text => 'Ошибка данных');
       return undef;
     }
-    return 1; 
+    return 1;
   });
 
   # my $bool = $self->check_workers
-  $app->helper(check_workers => sub { 
+  $app->helper(check_workers => sub {
     my $self = shift;
     my $stats = $self->minion->stats;
     return ($stats->{active_workers} != 0 || $stats->{inactive_workers} != 0);
@@ -54,7 +62,7 @@ sub register {
 
 
   # my $task_id = $self->db_task_id('preprocess_id')
-  $app->helper(db_task_id => sub { 
+  $app->helper(db_task_id => sub {
     my ($self, $k) = @_;
     my $task_id = 0;
     eval {
@@ -66,7 +74,7 @@ sub register {
   });
 
   # my $task_id = $self->check_task_in_progress('preprocess_id', 'utid')
-  $app->helper(check_task_in_progress => sub { 
+  $app->helper(check_task_in_progress => sub {
     my ($self, $k, $sesk) = @_;
     my $task_id = $self->db_task_id($k);
     my $s_id = $self->session($sesk);
@@ -88,9 +96,9 @@ sub register {
 
 
   # $job->app->set_task_state($db, 'preprocess_id', 0)
-  $app->helper(set_task_state => sub { 
+  $app->helper(set_task_state => sub {
     my ($self, $db, $key, $s) = @_;
-    
+
     my $e = eval {
       $db->query("UPDATE state SET value = ? WHERE `key` = ?", $s, $key);
     };
@@ -103,9 +111,9 @@ sub register {
   });
 
   # $job->app->reset_task_state($db, 'preprocess_id')
-  $app->helper(reset_task_state => sub { 
+  $app->helper(reset_task_state => sub {
     my ($self, $db, $key) = @_;
-    $self->set_task_state($db, $key, 0);  
+    $self->set_task_state($db, $key, 0);
   });
 
 
@@ -133,7 +141,9 @@ sub register {
   # my $full_operator_name = oprs($login)
   $app->helper(oprs => sub {
     my ($self, $login) = @_;
-    return $self->stash('oprs')->resolve($login);
+    # oprs object singleton
+    state $oprs = Adup::Ural::OperatorResolver->new($self->config);
+    return $oprs->resolve($login);
   });
 
   # <%== display_log_hack($info) %>

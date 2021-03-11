@@ -7,10 +7,8 @@ use Adup::Command::merge;
 use Adup::Command::resettasks;
 use Adup::Command::smbload;
 use Adup::Command::cron;
-use Adup::Ural::UsersCatalog;
-use Adup::Ural::OperatorResolver;
 
-our $VERSION = '1.14';
+our $VERSION = '1.15';
 
 # This method will run once at server start
 sub startup {
@@ -52,14 +50,6 @@ sub startup {
   # update database
   $self->migrate_database;
 
-  $self->defaults(uc => Adup::Ural::UsersCatalog->new($self->mysql_adup));
-  unless ($self->defaults('uc')) {
-    die "Fatal error: Users catalog creation error!";
-  }
-  $self->log->debug('Users catalog created');
-
-  $self->defaults(oprs => Adup::Ural::OperatorResolver->new($config));
-
   # Router authentication routine
   $self->hook(before_dispatch => sub {
     my $c = shift;
@@ -79,7 +69,7 @@ sub startup {
       return undef;
     }
     $c->stash(remote_user => $remote_user);
-    $c->stash(remote_user_role => $c->stash('uc')->get_user_role($remote_user));
+    $c->stash(remote_user_role => $c->users_catalog->get_user_role($remote_user));
     unless ($c->stash('remote_user_role')) {
       $c->render(text => 'Неверный пользователь', status => 401);
       return undef;
@@ -125,6 +115,9 @@ sub startup {
   $r->post('/photo/cam')->to('setattrphoto#campost');
 
   $r->get('/comp')->to('comp#comp');
+
+  $r->get('/manual')->to('manual#manual');
+  $r->post('/manual')->to('manual#manpost');
 }
 
 
