@@ -17,6 +17,7 @@ lib/Adup/Command/smbload.pm
 lib/Adup/Command/sync.pm
 lib/Adup/Controller/Comp.pm
 lib/Adup/Controller/Index.pm
+lib/Adup/Controller/Manual.pm
 lib/Adup/Controller/Setattremail.pm
 lib/Adup/Controller/Setattrphoto.pm
 lib/Adup/Controller/Setattrroom.pm
@@ -26,6 +27,7 @@ lib/Adup/Controller/Syncapprove.pm
 lib/Adup/Controller/Syncmerge.pm
 lib/Adup/Controller/Syncmergearchive.pm
 lib/Adup/Controller/Upload.pm
+lib/Adup/Plugin/Migrations.pm
 lib/Adup/Plugin/MPagenav.pm
 lib/Adup/Plugin/Utils.pm
 lib/Adup/Task/Merge.pm
@@ -65,6 +67,7 @@ MANIFEST			This list of files
 public/css/material-icons.css
 public/css/materialize.css
 public/css/materialize.min.css
+public/css/print.css
 public/css/styles.css
 public/fonts/MaterialIcons-Regular.eot
 public/fonts/MaterialIcons-Regular.ijmap
@@ -84,6 +87,8 @@ public/fonts/roboto/Roboto-Thin.woff
 public/fonts/roboto/Roboto-Thin.woff2
 public/img/error-icon.png
 public/img/favicon.ico
+public/img/manual/logonw10.png
+public/img/manual/logonw7.png
 public/img/no-photo-icon.png
 public/js/jquery-3.4.1.min.js
 public/js/materialize.js
@@ -96,8 +101,10 @@ script/start_server
 support/_i
 support/adup-minion.service
 support/adup.service
-support/adup.sql
 support/adup_site.conf
+support/instruction/instr.odt
+support/instruction/logonw10.xcf
+support/instruction/logonw7.xcf
 support/smbload.cron
 support/smbload.logrotate
 support/smbload.service
@@ -147,6 +154,9 @@ templates/comp/comp.html.ep
 templates/index/about.html.ep
 templates/index/index.html.ep
 templates/layouts/default.html.ep
+templates/layouts/print.html.ep
+templates/manual/manual.html.ep
+templates/manual/new_user.html.ep
 templates/setattr/email.html.ep
 templates/setattr/photo.html.ep
 templates/setattr/photocam.html.ep
