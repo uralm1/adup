@@ -35,7 +35,7 @@
   <footer class="page-footer brown">
     <div class="footer-copyright">
       <div class="scont">
-	<span title="Версия: <%== $version%>. Автор: Урал Хасанов, 2019">Группа сетевого администрирования</span>
+	<span title="Версия: <%== $version%>. Автор: Урал Хасанов, 2021">Группа сетевого администрирования</span>
         <span> &#x00b7 МУП "Уфаводоканал"</span>
 	<span> &#x00b7 <a href="/about">О программе</a></span>
 	<span class="right brown-text text-lighten-4">Текущий пользователь: <%= oprs $remote_user %></span>

@@ -5,8 +5,8 @@
   <div class="col s10">
     <h6><b>Версия: <%== $version %></b></h6>
     <p>
-Разработана группой сетевого администрирования МУП "Уфаводоканал", 2019 г.<br>
-автор: Хасанов Урал &lt;<a href="https://rc.uwc.ufanet.ru" target="_blank">uralm@uwc.ufanet.ru</a>&gt;, 2019 г.
+Разработана группой сетевого администрирования МУП "Уфаводоканал", 2019-21 г.<br>
+автор: Хасанов Урал &lt;<a href="https://rc.uwc.ufanet.ru" target="_blank">uralm@uwc.ufanet.ru</a>&gt;, 2019-21 г.
     </p>
     <p>
     <b>История версий:</b>

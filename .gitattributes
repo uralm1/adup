@@ -6,3 +6,5 @@
 *.woff2 binary
 *.eot binary
 *.ttf binary
+*.xcf binary
+*.odt binary

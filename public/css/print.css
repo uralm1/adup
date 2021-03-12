@@ -1,0 +1,38 @@
+body {
+  font:10pt Helvetica,sans-serif;
+  font-weight:normal;
+}
+
+table,th,td {
+  border:1px solid black;
+  border-collapse:collapse;
+}
+
+th,td {
+  padding:2px 5px 2px 5px;
+}
+
+th {
+  text-align: left;
+}
+
+img {
+  width:25%;
+  padding:10px;
+}
+
+@media print {
+table.nb {
+  page-break-inside:avoid;
+}
+div.block {
+  page-break-inside:avoid;
+}
+table.br {
+  page-break-inside:auto;
+}
+.nba {
+  page-break-after:avoid;
+}
+}
+

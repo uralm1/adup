@@ -159,3 +159,14 @@ DROP TABLE IF EXISTS `users`;
 DROP TABLE IF EXISTS `op_log`;
 DROP TABLE IF EXISTS `changelog`;
 
+-- 2 up
+INSERT INTO `changelog` (`ver_major`, `ver_minor`, `date`, `changelog`) VALUES
+(1, 15, '2021-03-12 00:00:00', 'Инструкция нового пользователя корпоративной сети.<br>\r\nОбновление js-библиотек.<br>\r\nИсправлены баги с валидацией.<br>\r\nОптимизации и улучшения.'),
+(1, 16, '2021-04-01 00:00:00', 'Проверка на включенные учётные записи в DISMISSED, формирование изменений на их отключение.<br>\r\nОбновление сокращений подразделений.'),
+(1, 17, '2021-05-10 00:00:00', 'Синхронизация с 1C ЗУП.');
+
+-- 2 down
+DELETE FROM `changelog` WHERE `ver_major` = 1 AND `ver_minor` = 15
+DELETE FROM `changelog` WHERE `ver_major` = 1 AND `ver_minor` = 16
+DELETE FROM `changelog` WHERE `ver_major` = 1 AND `ver_minor` = 17
+

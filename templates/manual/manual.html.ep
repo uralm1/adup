@@ -1,0 +1,95 @@
+% layout 'default', back_url => '/';
+% use MIME::Base64 qw(encode_base64url);
+% my $toast_msg = flash 'oper';
+% if ($toast_msg) {
+%   content_with done_toast => begin
+<script>$(document).ready(function(){M.toast({html:'<%= $toast_msg %>',displayLength:3000})});</script>
+%   end
+% }
+<div class="scont">
+  <h5>Инструкция новому сотруднику</h5>
+  <p>Распечатайте и выдайте новым сотрудникам <b>индивидуальные</b> инструкции по выполнению входа в корпоративную сеть и
+  использованию сервисов корпоративной сети.</p>
+  <p>Найдите сотрудника по Фамилии Имени Отчеству, разделитель - пробел, или логину. Возможно частичное указание.</p>
+  %= form_for manual => (method=>'GET') => begin
+  <div class="row">
+    <div class="input-field col s6">
+      <i class="material-icons prefix">account_circle</i>
+      <input id="u-search" type="text" name="s" value="<%= $search %>">
+      <label for="u-search">Введите подстроку для поиска сотрудника</label>
+    </div>
+    <div class="input-field col s2">
+      <button class="btn waves-effect waves-light" type="submit">Поиск</button>
+    </div>
+  </div>
+  % end
+  % if (defined $res_tab && scalar @$res_tab > 0) {
+  Выберите один из 5 первых найденных вариантов (вводите более подробную строку поиска если сотрудника нет в списке) и нажмите &quot;Инструкция&quot;:<br>
+  %= form_for manual => (method=>'POST') => begin
+  <table class="highlight">
+    <thead>
+      <tr>
+	<th style="width:5%">Выбрать</th>
+	<th style="width:20%">Ф.И.О.</th>
+	<th style="width:20%">Должность</th>
+	<th style="width:25%">Подразделение</th>
+	<th style="width:10%">Логин</th>
+	<th style="width:20%">Email</th>
+      </tr>
+    </thead>
+    <tbody>
+      % for my $r (@$res_tab) {
+      <tr>
+	<td class="vcenter">
+	  <label>
+	    <input class="usersel" name="ug" type="radio" value="<%== encode_base64url($r->{dn}, '') %>"/>
+	    <span></span>
+	  </label>
+	</td>
+	% if ($r->{disabled}) {
+	  <td class="fio"><span class="new badge grey" data-badge-caption="Отключен"></span>&nbsp;<%= $r->{cn} %></td>
+	% } else {
+	  <td class="fio"><%= $r->{cn} %></td>
+	% }
+	<td><%= $r->{title} %></td>
+	<td><%= $r->{department} %></td>
+	<td class="login"><%= $r->{login} %></td>
+	<td class="email"><%= $r->{email} %></td>
+      </tr>
+      % }
+    </tbody>
+  </table>
+  <input type="hidden" name="s" value="<%= $search %>">
+  <input id="u-fio" type="hidden" name="fio" value="">
+  <input id="u-login" type="hidden" name="login" value="">
+  <input id="u-email" type="hidden" name="email" value="">
+  <div class="row">
+    <div class="input-field col s2">
+      <button class="btn-large waves-effect waves-light" type="submit">Инструкция</button>
+    </div>
+  </div>
+  % end
+  % } elsif (defined $res_tab) {
+  <p><b>Никого не найдено, измените строку поиска.</b></p><br>
+  % }
+</div>
+
+% content_for script0 => begin
+<script>
+$(document).ready(function(){
+  var fill_form = function(s){
+    var td = s.parentsUntil('tr', 'td');
+    var fio = td.nextAll('.fio').text();
+    var login = td.nextAll('.login').text();
+    var email = td.nextAll('.email').text();
+    $('#u-fio').val((fio)?fio.trim():'');
+    $('#u-login').val((login)?login.trim():'');
+    $('#u-email').val((email)?email.trim():'');
+    //M.updateTextFields();
+  };
+
+  $('input.usersel').change(function(){fill_form($(this))});
+});
+</script>
+% end
+
