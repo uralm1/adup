@@ -19,7 +19,7 @@ sub index {
   if (defined $e) {
     if (my $lh = $log_rec->hash) {
       my $u = $self->oprs($lh->{login});
-      $last_upload = "$lh->{fdate},  выполнил: $u,  информация: \"$lh->{info}\""; 
+      $last_upload = "$lh->{fdate},  выполнил: $u,  информация: \"$lh->{info}\"";
     } else {
       $last_upload = 'Загрузка не производилась';
     }
@@ -39,7 +39,7 @@ sub index {
   if (defined $e) {
     if (my $lh = $log_rec->hash) {
       my $u = $self->oprs($lh->{login});
-      $last_merge = "$lh->{fdate},  выполнил: $u,  информация: \"$lh->{info}\""; 
+      $last_merge = "$lh->{fdate},  выполнил: $u,  информация: \"$lh->{info}\"";
     } else {
       $last_merge = 'Применение изменений не производилось';
     }
@@ -60,11 +60,12 @@ sub about {
   return undef unless $self->authorize($self->allow_all_roles);
 
   my $hist;
-  if (my $changelog = Adup::Ural::Changelog->new($self->mysql_adup->db, $self->stash('version'), 50)) {
-    $hist = $changelog->get_changelog_html;
+  if (my $changelog = Adup::Ural::Changelog->new($self->stash('version'), 50)) {
+    $hist = $changelog->get_changelog;
   } else {
     $hist = 'Информация отсутствует.';
   }
+
   $self->render(
     hist => $hist,
   );

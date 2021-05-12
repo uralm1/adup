@@ -50,6 +50,8 @@ install::
 	\$(NOECHO) if [ \"\$\$(id -u)\" != \"0\" ]; then install -m 0755 -d \$(DESTDIR)$inst_dir/run; else install -o adup -g adup -m 0755 -d \$(DESTDIR)$inst_dir/run; fi
 	\$(NOECHO) if [ \"\$\$(id -u)\" != \"0\" ]; then install -m 0755 -d \$(DESTDIR)$inst_dir/log; else install -o adup -g adup -m 0755 -d \$(DESTDIR)$inst_dir/log; fi
 	\$(NOECHO) if [ \"\$\$(id -u)\" != \"0\" ]; then install -m 0755 -d \$(DESTDIR)$inst_dir/tmp; else install -o adup -g adup -m 0755 -d \$(DESTDIR)$inst_dir/tmp; fi
+	\$(NOECHO) install -m 0644 CHANGELOG.md \$(DESTDIR)$inst_dir/CHANGELOG.md
+	\$(NOECHO) install -m 0644 README.md \$(DESTDIR)$inst_dir/README.md
 
 MAKE_FRAG
 }

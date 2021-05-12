@@ -2,56 +2,52 @@ package Adup::Ural::Changelog;
 use Mojo::Base -base;
 
 use Carp;
-use Mojo::mysql;
+use Mojo::File qw(path);
+use Encode;
 
-
-# Adup::Ural::Changelog->new($db, $APP::VERSION);
-# Adup::Ural::Changelog->new($db, $APP::VERSION, 10);
+# Adup::Ural::Changelog->new($APP::VERSION);
+# Adup::Ural::Changelog->new($APP::VERSION, 10);
 sub new {
-  my ($class, $db, $version, $limit) = @_;
-  croak "Database and version required" unless defined $db and defined $version;
+  my ($class, $version, $limit) = @_;
+  croak "Version required" unless defined $version;
   my $self = bless {
     version => $version,
     changelog => '',
   }, $class;
-  return undef unless( $self->_load($db, $limit || 5) );
+  return undef unless( $self->_load($limit || 5) );
   return $self;
 }
 
 # internal
 sub _load {
-  my ($self, $db, $limit) = @_;
-  if ($self->{version} =~ m/^\D*(\d+)\.(\d+)\D*$/) {
-    my ($major, $minor) = ($1, $2);
-   
-    my $e = eval {
-      my $rec = $db->query("SELECT CONCAT_WS('.', ver_major, ver_minor) AS ver, \
-DATE_FORMAT(date, '%e.%m.%Y') AS date, changelog \
-FROM changelog \
-WHERE (ver_major = ? AND ver_minor <= ?) OR ver_major < ? \
-ORDER BY ver_major DESC, ver_minor DESC LIMIT ?",
-        $major, $minor, $major, $limit);
-      while (my $next = $rec->hash) {
-	my $d = $next->{date} ? ", $next->{date}" : '';
-        $self->{changelog} .= "<p><b>Версия $next->{ver}$d</b></p><p>$next->{changelog}</p>";
-      }
-      $rec->finish;
-    };
-    unless (defined $e) {
-      carp $@;
-      return undef;
-    }
-    return 1;
-  } else {
-    carp "Invalid program version";
+  my ($self, $limit) = @_;
+
+  my $fh = eval { path('CHANGELOG.md')->open('<') };
+  unless ($fh) {
+    carp "Can't open CHANGELOG.md file";
     return undef;
   }
+  my $vcnt = 0;
+  my $mode = 0;
+  while (<$fh>) {
+    if ($mode == 0) {
+      next if /^# changelog/i;
+      next if /^all notable changes to this project/i;
+      next if /^$/;
+      $mode = 1;
+    }
+    $vcnt++ if /## \[.*\]/;
+    last if $vcnt > $limit;
+    $self->{changelog} .= decode_utf8($_) if $mode > 0;
+  }
+  $fh->close;
+  return 1;
 }
 
 #
 # getters
 #
-sub get_changelog_html {
+sub get_changelog {
   return shift->{changelog};
 }
 

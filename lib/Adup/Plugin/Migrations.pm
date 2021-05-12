@@ -166,7 +166,19 @@ INSERT INTO `changelog` (`ver_major`, `ver_minor`, `date`, `changelog`) VALUES
 (1, 17, '2021-05-10 00:00:00', 'Синхронизация с 1C ЗУП.');
 
 -- 2 down
-DELETE FROM `changelog` WHERE `ver_major` = 1 AND `ver_minor` = 15
-DELETE FROM `changelog` WHERE `ver_major` = 1 AND `ver_minor` = 16
-DELETE FROM `changelog` WHERE `ver_major` = 1 AND `ver_minor` = 17
+DELETE FROM `changelog` WHERE `ver_major` = 1 AND `ver_minor` = 15;
+DELETE FROM `changelog` WHERE `ver_major` = 1 AND `ver_minor` = 16;
+DELETE FROM `changelog` WHERE `ver_major` = 1 AND `ver_minor` = 17;
+
+-- 3 up
+DROP TABLE IF EXISTS `changelog`;
+
+-- 3 down
+CREATE TABLE IF NOT EXISTS `changelog` (
+  `ver_major` int(11) NOT NULL,
+  `ver_minor` int(11) NOT NULL,
+  `date` datetime NOT NULL,
+  `changelog` text NOT NULL,
+  PRIMARY KEY (`ver_major`,`ver_minor`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 

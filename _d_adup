@@ -1,0 +1,5 @@
+#!/bin/bash
+
+morbo script/adup
+#script/adup daemon
+#script/adup prefork

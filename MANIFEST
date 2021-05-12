@@ -1,10 +1,12 @@
 .dockerignore
 .gitattributes
 _b
+_d_adup
 _r_adup
 _r_cron
 _r_minion
 adup.conf_empty
+CHANGELOG.md
 cpanfile
 docker-compose.yml
 Dockerfile

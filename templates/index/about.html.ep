@@ -10,9 +10,7 @@
     </p>
     <p>
     <b>История версий:</b>
-    <div class="about-hist">
-      <%== $hist %>
-    </div>
+    <pre class="about-hist"><%== $hist %></pre>
     </p>
   </div>
 </div>

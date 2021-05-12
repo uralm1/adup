@@ -20,6 +20,8 @@ services:
       - TZ=Asia/Yekaterinburg
       - PUBLIC_ROOT=/opt/adup/public
       - PROXY_ADDR=http://adup-app:3000/
+    depends_on:
+      - app
     links:
       - app:adup-app
     restart: unless-stopped
@@ -33,7 +35,7 @@ services:
       - public:/opt/adup/public
     environment:
       - TZ=Asia/Yekaterinburg
-    links:
+    depends_on:
       - worker
     restart: unless-stopped
 
@@ -58,7 +60,7 @@ services:
     environment:
       - TZ=Asia/Yekaterinburg
     command: sh -c "script/check_db_hosts && script/adup cron -m production"
-    links:
+    depends_on:
       - worker
     restart: unless-stopped
 

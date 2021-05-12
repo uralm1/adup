@@ -1,5 +1,6 @@
 #!/bin/bash
 
+#docker volume create adup_tmp
 docker run -d --name adup-cron \
   -v /srv/adup/adup.conf:/opt/adup/adup.conf:ro \
   -v adup_tmp:/opt/adup/tmp \

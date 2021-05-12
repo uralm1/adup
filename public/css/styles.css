@@ -73,12 +73,29 @@ html {
   color:inherit;
 }
 
-div.about-hist {
+pre.about-hist {
   height:415px;
   overflow-y:scroll;
+  overflow-x:auto;
+  white-space:pre-wrap;
+  white-space:-moz-pre-wrap;
+  white-space:-pre-wrap;
+  white-space:-o-pre-wrap;
+  word-wrap:break-word;
   border:1px solid #d0d0d0;
   padding-left:10px;
   padding-right:10px;
+  font-size:0.85em;
+}
+
+pre.newversion-hist {
+  overflow-x:auto;
+  white-space:pre-wrap;
+  white-space:-moz-pre-wrap;
+  white-space:-pre-wrap;
+  white-space:-o-pre-wrap;
+  word-wrap:break-word;
+  font-size:0.85em;
 }
 
 .format-helper {

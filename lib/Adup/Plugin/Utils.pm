@@ -46,7 +46,7 @@ sub register {
   # renders error if not number
   $app->helper(exists_and_number => sub {
     my ($self, $v) = @_;
-    unless (defined($v) && $v =~ /^\d+$/) {
+    unless (defined $v && $v =~ /^\d+$/) {
       $self->render(text => 'Ошибка данных');
       return undef;
     }
@@ -125,11 +125,11 @@ sub register {
     if (defined $coo) {
       if ($coo ne $cur_version) {
         $c->cookie(versionA => $cur_version, {path => '/', expires=>time+360000000});
-        if (my $changelog = Adup::Ural::Changelog->new($c->mysql_adup->db, $cur_version)) {
+        if (my $changelog = Adup::Ural::Changelog->new($cur_version)) {
 	  return '<div id="newversion-modal" class="modal modal-fixed-footer">
 <div class="modal-content"><h4>Новая версия '.$changelog->get_version.
-'</h4><p><b>Последние улучшения и новинки:</b></p>'.$changelog->get_changelog_html.
-'</div><div class="modal-footer"><a href="#!" class="modal-close waves-effect waves-green btn-flat">Отлично</a></div></div>';
+'</h4><p><b>Последние улучшения и новинки:</b></p><pre class="newversion-hist">'.$changelog->get_changelog.
+'</pre></div><div class="modal-footer"><a href="#!" class="modal-close waves-effect waves-green btn-flat">Отлично</a></div></div>';
 	}
       }
     } else {

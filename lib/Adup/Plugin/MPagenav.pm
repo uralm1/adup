@@ -8,7 +8,7 @@ our $VERSION = "0.13";
 # Homer: Well basically, I just copied the plant we have now.
 #        Then, I added some fins to lower wind resistance.
 #        And this racing stripe here I feel is pretty sharp.
-# Burns: Agreed.  First prize!
+# Burns: Agreed. First prize!
 sub register {
   my ( $self, $app, $args ) = @_;
   $args ||= {};
