@@ -76,7 +76,7 @@ sub do_sync {
   my $pagedctl = Net::LDAP::Control::Paged->new(size => 100);
 
   my @searchargs = ( base => $ldapbase, scope => 'sub',
-    filter => '(&(objectCategory=person)(objectClass=user))', 
+    filter => '(&(objectCategory=person)(objectClass=user))',
     attrs => ['cn', 'sAMAccountName', 'mail', 'userAccountControl'],
     control => [ $pagedctl ]
   );
@@ -123,7 +123,7 @@ sub do_sync {
 	}
 
         # update progress
-	$entry_count ++;
+	$entry_count++;
         if ($entry_count % $mod == 0) {
           my $percent = ceil($entry_count / $entries_total * 100);
           $args{job}->note(

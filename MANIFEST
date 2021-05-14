@@ -49,6 +49,7 @@ lib/Adup/Ural/ChangeOUDelete.pm
 lib/Adup/Ural/ChangeOUModify.pm
 lib/Adup/Ural/ChangeUserCreate.pm
 lib/Adup/Ural/ChangeUserDelete.pm
+lib/Adup/Ural/ChangeUserDisableDismissed.pm
 lib/Adup/Ural/ChangeUserFlatGroup.pm
 lib/Adup/Ural/ChangeUserMove.pm
 lib/Adup/Ural/Dblog.pm
@@ -63,6 +64,7 @@ lib/Adup/Ural/SyncCreateOUs.pm
 lib/Adup/Ural/SyncDeleteFlatGroups.pm
 lib/Adup/Ural/SyncDeleteOUs.pm
 lib/Adup/Ural/SyncDeleteUsers.pm
+lib/Adup/Ural/SyncDisableDismissed.pm
 lib/Adup/Ural/UsersCatalog.pm
 Makefile.PL
 MANIFEST			This list of files

@@ -13,6 +13,7 @@ use Adup::Ural::Change;
 use Adup::Ural::ChangeUserCreate;
 use Adup::Ural::ChangeUserDelete;
 use Adup::Ural::ChangeUserFlatGroup;
+use Adup::Ural::ChangeUserDisableDismissed;
 use Adup::Ural::ChangeAttr;
 use Adup::Ural::ChangeOUCreate;
 use Adup::Ural::ChangeOUDelete;
@@ -73,6 +74,7 @@ sub _merge {
     { type => 8, desc => 'блокирование пользователей', rep_no => 1},
     { type => 11, desc => 'удаление групп почтового справочника', rep_no => 1},
     { type => 21, desc => 'удаление подразделений', rep_no => 1},
+    { type => 14, desc => 'отключение архивных пользователей', rep_no => 1},
   );
 
   my $log_buf;
@@ -142,7 +144,7 @@ sub _merge {
   #
   # end of merge sequence main loop
   #
-  
+
   $log->l(info => 'Отчёт о применении изменений. '.$log_buf) if $log_buf;
 
   $job->app->reset_task_state($db_adup, $TASK_ID);

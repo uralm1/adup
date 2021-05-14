@@ -1,9 +1,6 @@
 #!/usr/bin/perl
 
-use strict;
-use warnings;
-use v5.12;
-use utf8;
+use Mojo::Base -strict;
 use Carp;
 use POSIX qw(ceil);
 use Mojo::mysql;
@@ -22,6 +19,7 @@ use Adup::Ural::SyncAttributesCreateMoveUsers;
 use Adup::Ural::SyncDeleteUsers;
 use Adup::Ural::SyncDeleteFlatGroups;
 use Adup::Ural::SyncDeleteOUs;
+use Adup::Ural::SyncDisableDismissed;
 
 binmode(STDOUT, ':utf8');
 
@@ -34,6 +32,7 @@ sub config { return {
   ldap_base=>$cfg->{ldap_base},
   personnel_ldap_base=>"OU=1,$cfg->{ldap_base}",
   flatgroups_ldap_base=>"OU=2,$cfg->{ldap_base}",
+  dismissed_ou_dn=>"OU=5DISMISSED,$cfg->{ldap_base}",
   user_cleanup_skip_dn => [
     "OU=11CONTACTS,OU=1,$cfg->{ldap_base}",
     "OU=4SYSTEM,$cfg->{ldap_base}",
@@ -90,9 +89,9 @@ my $job = bless {},'Test::Job';
   my $c2 = 0;
 =for comment
   unless (defined ($c1 = Adup::Ural::SyncCreateOUs::do_sync(
-    db => $db_adup, 
-    ldap => $ldap, 
-    log => $log, 
+    db => $db_adup,
+    ldap => $ldap,
+    log => $log,
     job => $job,
     user => $remote_user
   ))) {
@@ -106,9 +105,9 @@ my $job = bless {},'Test::Job';
   #
 =for comment
   unless (defined ($c2 = Adup::Ural::SyncCreateFlatGroups::do_sync(
-    db => $db_adup, 
-    ldap => $ldap, 
-    log => $log, 
+    db => $db_adup,
+    ldap => $ldap,
+    log => $log,
     job => $job,
     user => $remote_user
   ))) {
@@ -121,34 +120,34 @@ my $job = bless {},'Test::Job';
     $log->l(info=>"Проведена неполная предварительная синхронизация. Примените изменения создания подразделений и групп, затем перезапустите задание расчета изменений для полной синхронизации.");
     _setstate($db_adup, 0);
     $ldap->unbind;
-  
+
     exit 0;
   }
 
   #
   # SyncAttributesCreateMoveUsers subtask
   #
-#=for comment
+=for comment
   unless (defined Adup::Ural::SyncAttributesCreateMoveUsers::do_sync(
-    db => $db_adup, 
-    ldap => $ldap, 
-    log => $log, 
+    db => $db_adup,
+    ldap => $ldap,
+    log => $log,
     job => $job,
     user => $remote_user
   )) {
     _setstate($db_adup, 0);
     die 'SyncAttributesCreateMoveUsers fatal error';
   }
-#=cut
+=cut
 
   #
   # SyncDeleteFlatGroups subtask
   #
 =for comment
   unless (defined Adup::Ural::SyncDeleteFlatGroups::do_sync(
-    db => $db_adup, 
-    ldap => $ldap, 
-    log => $log, 
+    db => $db_adup,
+    ldap => $ldap,
+    log => $log,
     job => $job,
     user => $remote_user
   )) {
@@ -162,9 +161,9 @@ my $job = bless {},'Test::Job';
   #
 =for comment
   unless (defined Adup::Ural::SyncDeleteUsers::do_sync(
-    db => $db_adup, 
-    ldap => $ldap, 
-    log => $log, 
+    db => $db_adup,
+    ldap => $ldap,
+    log => $log,
     job => $job,
     user => $remote_user
   )) {
@@ -178,9 +177,9 @@ my $job = bless {},'Test::Job';
   #
 =for comment
   unless (defined Adup::Ural::SyncDeleteOUs::do_sync(
-    db => $db_adup, 
-    ldap => $ldap, 
-    log => $log, 
+    db => $db_adup,
+    ldap => $ldap,
+    log => $log,
     job => $job,
     user => $remote_user
   )) {
@@ -189,9 +188,25 @@ my $job = bless {},'Test::Job';
   }
 =cut
 
+  #
+  # SyncDisableDismissed subtask
+  #
+#=for comment
+  unless (defined Adup::Ural::SyncDisableDismissed::do_sync(
+    db => $db_adup,
+    ldap => $ldap,
+    log => $log,
+    job => $job,
+    user => $remote_user
+  )) {
+    _setstate($db_adup, 0);
+    die 'SyncDisableDismissed fatal error';
+  }
+#=cut
+
 _setstate($db_adup, 0);
 $ldap->unbind;
-  
+
 exit 0;
 
 

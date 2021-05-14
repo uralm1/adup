@@ -163,7 +163,7 @@ sub do_sync {
 	}
 
 	# update progress
-	$entry_count ++;
+	$entry_count++;
 	if ($entry_count % $mod == 0) {
 	  my $percent = ceil($entry_count / $entries_total * 100);
 	  $args{job}->note(

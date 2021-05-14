@@ -19,6 +19,7 @@ use Adup::Ural::Change;
 use Adup::Ural::ChangeUserCreate;
 use Adup::Ural::ChangeUserDelete;
 use Adup::Ural::ChangeUserFlatGroup;
+use Adup::Ural::ChangeUserDisableDismissed;
 use Adup::Ural::ChangeAttr;
 use Adup::Ural::ChangeOUCreate;
 use Adup::Ural::ChangeOUDelete;
@@ -86,6 +87,7 @@ my $job = bless {},'Test::Job';
     { type => 8, desc => 'блокирование пользователей', rep_no => 1},
     { type => 11, desc => 'удаление групп почтового справочника', rep_no => 1},
     { type => 21, desc => 'удаление подразделений', rep_no => 1},
+    { type => 14, desc => 'отключение архивных пользователей', rep_no => 1},
   );
 
   my $log_buf;
@@ -156,7 +158,7 @@ my $job = bless {},'Test::Job';
 
 _setstate($db_adup, 0);
 $ldap->unbind;
-  
+
 exit 0;
 
 

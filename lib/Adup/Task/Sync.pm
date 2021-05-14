@@ -15,6 +15,7 @@ use Adup::Ural::SyncAttributesCreateMoveUsers;
 use Adup::Ural::SyncDeleteUsers;
 use Adup::Ural::SyncDeleteFlatGroups;
 use Adup::Ural::SyncDeleteOUs;
+use Adup::Ural::SyncDisableDismissed;
 
 my $TASK_ID = 'sync_id';
 # $TASK_LOG_STATE_SUCCESS = 10;
@@ -64,9 +65,9 @@ sub _sync {
   my $c1 = 0;
   my $c2 = 0;
   unless (defined ($c1 = Adup::Ural::SyncCreateOUs::do_sync(
-    db => $db_adup, 
-    ldap => $ldap, 
-    log => $log, 
+    db => $db_adup,
+    ldap => $ldap,
+    log => $log,
     job => $job,
     user => $remote_user
   ))) {
@@ -78,9 +79,9 @@ sub _sync {
   # SyncCreateFlatGroups subtask
   #
   unless (defined ($c2 = Adup::Ural::SyncCreateFlatGroups::do_sync(
-    db => $db_adup, 
-    ldap => $ldap, 
-    log => $log, 
+    db => $db_adup,
+    ldap => $ldap,
+    log => $log,
     job => $job,
     user => $remote_user,
   ))) {
@@ -100,9 +101,9 @@ sub _sync {
   # SyncAttributesCreateMoveUsers subtask
   #
   unless (defined Adup::Ural::SyncAttributesCreateMoveUsers::do_sync(
-    db => $db_adup, 
-    ldap => $ldap, 
-    log => $log, 
+    db => $db_adup,
+    ldap => $ldap,
+    log => $log,
     job => $job,
     user => $remote_user,
   )) {
@@ -114,9 +115,9 @@ sub _sync {
   # SyncDeleteFlatGroups subtask
   #
   unless (defined Adup::Ural::SyncDeleteFlatGroups::do_sync(
-    db => $db_adup, 
-    ldap => $ldap, 
-    log => $log, 
+    db => $db_adup,
+    ldap => $ldap,
+    log => $log,
     job => $job,
     user => $remote_user,
   )) {
@@ -128,9 +129,9 @@ sub _sync {
   # SyncDeleteUsers subtask
   #
   unless (defined Adup::Ural::SyncDeleteUsers::do_sync(
-    db => $db_adup, 
-    ldap => $ldap, 
-    log => $log, 
+    db => $db_adup,
+    ldap => $ldap,
+    log => $log,
     job => $job,
     user => $remote_user,
   )) {
@@ -142,14 +143,28 @@ sub _sync {
   # SyncDeleteOUs subtask
   #
   unless (defined Adup::Ural::SyncDeleteOUs::do_sync(
-    db => $db_adup, 
-    ldap => $ldap, 
-    log => $log, 
+    db => $db_adup,
+    ldap => $ldap,
+    log => $log,
     job => $job,
     user => $remote_user,
   )) {
     $job->app->reset_task_state($db_adup, $TASK_ID);
     return $job->fail('SyncDeleteOUs fatal error');
+  }
+
+  #
+  # SyncDisableDismissed subtask
+  #
+  unless (defined Adup::Ural::SyncDisableDismissed::do_sync(
+    db => $db_adup,
+    ldap => $ldap,
+    log => $log,
+    job => $job,
+    user => $remote_user,
+  )) {
+    $job->app->reset_task_state($db_adup, $TASK_ID);
+    return $job->fail('SyncDisableDismissed fatal error');
   }
 
   $job->app->reset_task_state($db_adup, $TASK_ID);
