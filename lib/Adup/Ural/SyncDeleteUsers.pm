@@ -128,8 +128,7 @@ sub do_sync {
           my $percent = ceil($entry_count / $entries_total * 100);
           $args{job}->note(
 	    progress => $percent,
-            # mysql minion backend bug workaround
-	    info => encode_utf8("$percent% Завершающая синхронизация уволенных пользователей"),
+	    info => "$percent% Завершающая синхронизация уволенных пользователей",
           );
         }
       }

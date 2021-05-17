@@ -90,14 +90,14 @@ sub do_sync {
         my $filter_fio = escape_filter_value $cn;
         my $filter = "(&(objectCategory=person)(objectClass=user)(cn=$filter_fio))";
         $r = $args{ldap}->search(base => $ldapbase, scope => 'sub',
-  	  filter => $filter, 
+          filter => $filter,
 	  attrs => [ 'cn','name', @attributes ]
         );
       } elsif ($dup == 1) {
 	# ** duplicates in different departments **
 	# search ldap inside only department
 	$r = $args{ldap}->search(base => $dn_built, scope => 'base',
-	  filter => '(&(objectCategory=person)(objectClass=user))', 
+	  filter => '(&(objectCategory=person)(objectClass=user))',
 	  attrs => [ 'cn','name', @attributes ]
 	);
       } else { die 'FIXME'; }
@@ -110,7 +110,7 @@ sub do_sync {
 
       my $count = $r->count;
       #say "Найдено: $count";
-      
+
       if ($count == 1) {
 	# found 1. check and sync attributes
 	my $entry = $r->entry(0);
@@ -118,7 +118,7 @@ sub do_sync {
 	my $dn = decode_utf8($entry->dn);
 	my $canon_dn = canonical_dn($dn);
 	#say 'dn: '.$dn;
-       
+
 	# hash of existing attributes (from AD)
 	my $exhash = {};
 	my $get_val_func = sub { $exhash->{$_[0]} = decode_utf8($entry->get_value($_[0])) if defined $entry->get_value($_[0]); };
@@ -144,7 +144,7 @@ sub do_sync {
           my $fg_name = substr($next->{flatdept_name}, 0, 1024) if $next->{flatdept_name};
 	  # get members of this flat group
           $r = $args{ldap}->search(base => $fg_dn, scope => 'base',
-	    filter => '(objectClass=Group)', 
+	    filter => '(objectClass=Group)',
 	    attrs => [ 'member' ]);
 	  if ($r->code && $r->code != LDAP_NO_SUCH_OBJECT) {
 	    $args{log}->l(state => 11, info => "Синхронизация пользователей. Произошла ошибка поиска групп в AD.");
@@ -175,7 +175,7 @@ sub do_sync {
 	    $c_err->todb(db => $args{db});
 	  }
         } #if (flatdept_cn)
-	
+
         unless ($c->empty) {
 	  $c->todb(db => $args{db});
 	  $attr_changes_count++;
@@ -229,8 +229,7 @@ sub do_sync {
       my $percent = ceil($line_count / $lines_total * 100);
       $args{job}->note(
 	progress => $percent,
-        # mysql minion backend bug workaround
-	info => encode_utf8("$percent% Синхронизация пользователей, изменений аттрибутов"),
+	info => "$percent% Синхронизация пользователей, изменений аттрибутов",
       );
     }
   }

@@ -37,7 +37,7 @@ sub _process_dbf {
   my $dbf = eval { new XBase($job->app->config('galdb_temporary_file')); };
 
   if (defined $dbf) {
-    my $e = eval { 
+    my $e = eval {
       $db_adup->query("DELETE FROM persons");
       $db_adup->query("DELETE FROM depts");
       $db_adup->query("DELETE FROM flatdepts");
@@ -64,7 +64,7 @@ sub _process_dbf {
     ### 1.begin of persons loop ###
     #
     for (0 .. $last_record) {
-      my ($deleted, $id, $fio, $otdel, $dolj, $tabn) = 
+      my ($deleted, $id, $fio, $otdel, $dolj, $tabn) =
         $dbf->get_record($_, 'ID', 'FIO', 'OTDEL', 'DOLJ', 'TABN');
       unless ($deleted) {
 	# split fio
@@ -116,7 +116,7 @@ sub _process_dbf {
 	$e = eval {
 	  $db_adup->query("INSERT INTO persons (gal_id, fio, dup, f, i, o, dept_id, flatdept_id, otdel, dolj, tabn) \
 	    VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-	    $id, 
+	    $id,
 	    $fio,
 	    0, #1.7 will update later
 	    $fio_f, $fio_i, $fio_o,
@@ -139,8 +139,7 @@ sub _process_dbf {
 	my $percent = ceil($_ / $last_record * 100);
 	$job->note(
 	  progress => $percent,
-          # mysql minion backend bug workaround
-	  info => encode_utf8("$percent% Обработка перечня сотрудников"),
+	  info => "$percent% Обработка перечня сотрудников",
 	);
       }
     }
@@ -153,7 +152,7 @@ sub _process_dbf {
     #
     for my $fio (keys %fio_dedup_h) {
       if ($fio_dedup_h{$fio} > 0) {
-	$e = eval { 
+	$e = eval {
 	  $db_adup->query("UPDATE persons SET dup = ? WHERE fio = ?", $fio_dedup_h{$fio}, $fio);
 	};
 	unless (defined $e) {
@@ -169,8 +168,7 @@ sub _process_dbf {
 
     $job->note(
       progress => 100,
-      # mysql minion backend bug workaround
-      info => encode_utf8('Выполняется разбор оргструктуры подразделений'),
+      info => 'Выполняется разбор оргструктуры подразделений',
     );
 
     #
@@ -182,7 +180,7 @@ sub _process_dbf {
       $e = eval {
 	$db_adup->query("INSERT INTO depts (id, name, level, parent) \
 	  VALUES(?, ?, ?, ?)",
-	  $_, 
+	  $_,
 	  $id_dept_h{$_}->{name},
 	  $id_dept_h{$_}->{level},
 	  $id_dept_h{$_}->{parent}

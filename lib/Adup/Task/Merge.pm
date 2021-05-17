@@ -125,8 +125,7 @@ sub _merge {
 	my $percent = ceil($changes_count / $changes_total * 100);
         $job->note(
 	  progress => $percent,
-          # mysql minion backend bug workaround
-	  info => encode_utf8("$percent% Выполняется изменение-$seq_el->{desc}"),
+	  info => "$percent% Выполняется изменение-$seq_el->{desc}",
 	);
       }
     }

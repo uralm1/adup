@@ -65,7 +65,7 @@ sub do_sync {
   ### begin of OU loop ###
   #
   my $res = $args{ldap}->search(base => $persldapbase, scope => 'sub',
-    filter => '(&(objectCategory=organizationalunit)(objectClass=organizationalunit))', 
+    filter => '(&(objectCategory=organizationalunit)(objectClass=organizationalunit))',
     attrs => ['ou', 'description']
   );
   if ($res->code && $res->code != LDAP_NO_SUCH_OBJECT) {
@@ -88,7 +88,7 @@ ENTRYLOOP:
     for (@$skip_dn) {
       next ENTRYLOOP if ($canon_dn =~ /^$_$/);
     }
-    
+
     ## consume results
     my $dn = decode('utf-8', $entry->dn);
     my $ou = decode('utf-8', $entry->get_value('ou'));
@@ -179,8 +179,7 @@ ENTRYLOOP:
       my $percent = ceil($entry_count / $entries_total * 100);
       $args{job}->note(
 	progress => $percent,
-        # mysql minion backend bug workaround
-	info => encode_utf8("$percent% Завершающая синхронизация подразделений"),
+	info => "$percent% Завершающая синхронизация подразделений",
       );
     }
 

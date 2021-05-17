@@ -8,7 +8,7 @@ use Adup::Command::resettasks;
 use Adup::Command::smbload;
 use Adup::Command::cron;
 
-our $VERSION = '1.16';
+our $VERSION = '1.17';
 
 # This method will run once at server start
 sub startup {

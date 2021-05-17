@@ -28,8 +28,7 @@ sub do_sync {
   my $pmsg = 'Проверка, все ли записи отключены в DISMISSED';
   $args{job}->note(
     progress => 0,
-    # mysql minion backend bug workaround
-    info => encode_utf8("0% $pmsg"),
+    info => "0% $pmsg",
   );
 
   #
@@ -96,8 +95,7 @@ sub do_sync {
 
   $args{job}->note(
     progress => 100,
-    # mysql minion backend bug workaround
-    info => encode_utf8("100% $pmsg"),
+    info => "100% $pmsg",
   );
 
   $args{log}->l(info => "Проверка учётных записей в DISMISSED. Создано $delete_changes_count изменений блокирования архивных учётных записей.");

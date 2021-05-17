@@ -45,7 +45,7 @@ sub do_sync {
   my $changes_count = 0;
   my $mod = int($lines_total / 20) || 1;
   my $fg_ldapbase = $args{job}->app->config->{flatgroups_ldap_base};
-  
+
   while (my $next = $res->hash) {
     #say $next->{name};
     my $name_dn = escape_dn_value $next->{cn};
@@ -110,8 +110,7 @@ sub do_sync {
       my $percent = ceil($line_count / $lines_total * 100);
       $args{job}->note(
 	progress => $percent,
-        # mysql minion backend bug workaround
-	info => encode_utf8("$percent% Синхронизация групп почтового справочника"),
+	info => "$percent% Синхронизация групп почтового справочника",
       );
     }
   }

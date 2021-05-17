@@ -87,7 +87,7 @@ sub do_sync {
   my $pagedctl = Net::LDAP::Control::Paged->new(size => 100);
 
   my @searchargs = ( base => $fg_ldapbase, scope => 'sub',
-    filter => '(&(objectCategory=group)(objectClass=group))', 
+    filter => '(&(objectCategory=group)(objectClass=group))',
     attrs => ['cn', 'grouptype', 'description', 'member'],
     control => [ $pagedctl ]
   );
@@ -152,7 +152,7 @@ sub do_sync {
 		  ->member_cn($member_cn)
 		  ->member_dn($member)
 		  ->flatgroup_name($name);
-	
+
 		$c->todb(db => $args{db});
 
 		$user_delete_flatgroup_changes_count++;
@@ -168,8 +168,7 @@ sub do_sync {
 	  my $percent = ceil($entry_count / $entries_total * 100);
 	  $args{job}->note(
 	    progress => $percent,
-            # mysql minion backend bug workaround
-	    info => encode_utf8("$percent% Завершающая синхронизация групп почтового справочника"),
+	    info => "$percent% Завершающая синхронизация групп почтового справочника",
 	  );
 	}
       } # entries loop
