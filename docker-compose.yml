@@ -56,6 +56,7 @@ services:
     container_name: adup-cron
     volumes:
       - /srv/adup/adup.conf:/opt/adup/adup.conf:ro
+      - tmp:/opt/adup/tmp
     environment:
       - TZ=Asia/Yekaterinburg
     command: sh -c "script/check_db_hosts && script/adup cron -m production"
