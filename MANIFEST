@@ -57,6 +57,7 @@ lib/Adup/Ural/DeptsHash.pm
 lib/Adup/Ural/FlatGroupNamingAI.pm
 lib/Adup/Ural/LdapListsUtil.pm
 lib/Adup/Ural/LoginAI.pm
+lib/Adup/Ural/MySQLDateTimeAnalog.pm
 lib/Adup/Ural/OperatorResolver.pm
 lib/Adup/Ural/SyncAttributesCreateMoveUsers.pm
 lib/Adup/Ural/SyncCreateFlatGroups.pm
@@ -124,6 +125,7 @@ t/60_userscatalog.t
 t/70_loginai.t
 t/71_checkdnbase.t
 t/72_operatorresolver.t
+t/73_mysqldatetimeanalog.t
 t/90_dblog.t
 t2/_fio_parser.pl
 t2/_ldap_grp_create.pl

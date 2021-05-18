@@ -2,8 +2,7 @@ package Adup::Ural::Change;
 use Mojo::Base -base;
 
 use Carp;
-use DateTime;
-use DateTime::Format::MySQL;
+use Adup::Ural::MySQLDateTimeAnalog;
 use Scalar::Util qw(blessed);
 use Mojo::JSON qw(to_json);
 use Mojo::Util qw(xml_escape);
@@ -22,7 +21,7 @@ sub new {
   $self->{name} = $name;
   $self->{dn} = $dn;
   $self->{author} = $author;
-  $self->{date} = DateTime::Format::MySQL->format_datetime(DateTime->now(time_zone=>'local'));
+  $self->{date} = mysql_datetime_now;
   $self->{approved} = undef;
   $self->{approval_author} = 'н/д';
   $self->{approval_date} = undef;
@@ -96,7 +95,7 @@ sub approve {
   $args{author} ||= 'н/д';
   $self->{approved} = 1;
   $self->{approval_author} = $args{author};
-  $self->{approval_date} = DateTime::Format::MySQL->format_datetime(DateTime->now(time_zone=>'local'));
+  $self->{approval_date} = mysql_datetime_now;
 }
 
 # $obj->unapprove();
@@ -130,15 +129,15 @@ sub todb {
     unless (defined $e) {
       carp 'Error updating change object to DB';
       return undef;
-    } 
+    }
     $id;
   } else {
     my $e = eval {
       if (exists $args{metadata}) {
-        $id = $args{db}->query("INSERT INTO changes (name, type, c, metadata) VALUES (?, ?, ?, ?)", 
+        $id = $args{db}->query("INSERT INTO changes (name, type, c, metadata) VALUES (?, ?, ?, ?)",
 	  $self->{name}, $self->type_robotic, {json=>$self}, $args{metadata})->last_insert_id;
       } else {
-        $id = $args{db}->query("INSERT INTO changes (name, type, c) VALUES (?, ?, ?)", 
+        $id = $args{db}->query("INSERT INTO changes (name, type, c) VALUES (?, ?, ?)",
 	  $self->{name}, $self->type_robotic, {json=>$self})->last_insert_id;
       }
     };
@@ -159,7 +158,7 @@ sub deletedb {
     my $e = eval {
       $args{db}->query("DELETE FROM changes WHERE id = ?", $self->{id});
     };
-    unless (defined $e) { 
+    unless (defined $e) {
       carp 'Error deleting change object from database';
       return undef;
     }
@@ -179,10 +178,10 @@ sub toarchive {
     carp 'Only merged changes are permitted to put in archive.';
     return undef;
   }
- 
+
   my $id;
   my $e = eval {
-    $id = $args{db}->query("INSERT INTO changes_archive (name, type, c) VALUES (?, ?, ?)", 
+    $id = $args{db}->query("INSERT INTO changes_archive (name, type, c) VALUES (?, ?, ?)",
       $self->{name}, $self->type_robotic, {json=>$self})->last_insert_id;
   };
   unless (defined $e) {
@@ -215,7 +214,7 @@ sub _set_merged {
   my ($self, $author) = @_;
   $self->{merged} = 1;
   $self->{merge_author} = $author;
-  $self->{merge_date} = DateTime::Format::MySQL->format_datetime(DateTime->now(time_zone=>'local'));
+  $self->{merge_date} = mysql_datetime_now;
 }
 
 

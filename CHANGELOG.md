@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file.
 
 ## [1.17] - 2021-05-17
 - Исправление облачных билдов.
+- Своя функция вместо огромных DateTime.
 - Откат #305a4cf.
 
 ## [1.16] - 2021-05-14
