@@ -43,6 +43,7 @@ sub startup {
   $self->plugin('Adup::Task::Preprocess');
   $self->plugin('Adup::Task::Sync');
   $self->plugin('Adup::Task::Merge');
+  $self->plugin('Adup::Task::SmbLoad');
   push @{$self->commands->namespaces}, 'Adup::Command';
 
   $self->defaults(version => $VERSION);

@@ -34,6 +34,7 @@ lib/Adup/Plugin/MPagenav.pm
 lib/Adup/Plugin/Utils.pm
 lib/Adup/Task/Merge.pm
 lib/Adup/Task/Preprocess.pm
+lib/Adup/Task/SmbLoad.pm
 lib/Adup/Task/Sync.pm
 lib/Adup/Ural/AttrTranslate.pm
 lib/Adup/Ural/Change.pm
