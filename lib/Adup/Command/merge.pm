@@ -13,28 +13,15 @@ sub run {
 
   my $log = Adup::Ural::Dblog->new($app->mysql_adup->db, login=>'automatic', state=>90);
 
-  if ($app->check_workers) {
-    # concurrency checks
-    my $upload_task_id = $app->db_task_id('preprocess_id');
-    my $sync_task_id = $app->db_task_id('sync_id');
-    my $merge_task_id = $app->db_task_id('merge_id');
-    if ($upload_task_id == 0 && $sync_task_id == 0 && $merge_task_id == 0) {
-      my $id = $app->minion->enqueue(merge => ['automatic']);
-      # there is no session when started from command line
-      return 0;
-    } elsif ($merge_task_id > 0) {
-      say 'Merge task is already running. Command cancelled.';
-      $log->l(info=>'Произошла ошибка запуска применения изменений. Задание применения изменений уже запущено.', state=>91);
-    } elsif ($upload_task_id > 0) {
-      say 'Preprocess task is running. Command cancelled. You can repeat your request later.';
-      $log->l(info=>'Произошла ошибка запуска применения изменений. Работает задание постобработки.', state=>91);
-    } elsif ($sync_task_id > 0) {
-      say 'Sync task is running. Command cancelled. You can repeat your request later.';
-      $log->l(info=>'Произошла ошибка запуска применения изменений. Работает задание расчёта изменений.', state=>91);
+  if ($app->can_start_task(
+    sub {
+      say "Command cancelled. Execution subsystem error or other task is running: $_.";
+      $log->l(info=>'Произошла ошибка запуска применения изменений. Недоступна подсистема исполнения или система занята исполнением другого задания.', state=>1);
     }
-  } else {
-    say 'Command cancelled. Execution subsystem error.';
-    $log->l(info=>'Произошла ошибка запуска применения изменений. Недоступна подсистема исполнения.', state=>91);
+  )) {
+    my $id = $app->minion->enqueue(merge => ['automatic']);
+    # there is no session when started from command line
+    return 0;
   }
   return 1;
 }

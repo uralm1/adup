@@ -25,7 +25,7 @@ sub do_sync {
   say "in SyncDisableDismissed subtask";
 
   my $dismissed_ldapbase = $args{job}->app->config->{dismissed_ou_dn};
-  my $pmsg = 'Проверка, все ли записи отключены в DISMISSED';
+  my $pmsg = 'Проверка, все ли архивные учетные записи отключены';
   $args{job}->note(
     progress => 0,
     info => "0% $pmsg",
@@ -88,7 +88,7 @@ sub do_sync {
   }
 
   if ($res->code) {
-    $args{log}->l(state => 11, info => "Проверка учётных записей в DISMISSED. Произошла ошибка поиска в AD.");
+    $args{log}->l(state => 11, info => "Проверка блокирования архивных учётных записей. Произошла ошибка поиска в AD.");
     carp 'SyncDisableDismissed - ldap paged search error: '.$res->error;
     return undef;
   }
@@ -98,7 +98,7 @@ sub do_sync {
     info => "100% $pmsg",
   );
 
-  $args{log}->l(info => "Проверка учётных записей в DISMISSED. Создано $delete_changes_count изменений блокирования архивных учётных записей.");
+  $args{log}->l(info => "Проверка блокирования архивных учётных записей. Создано $delete_changes_count изменений блокирования архивных учётных записей.");
 
   return $delete_changes_count;
 }

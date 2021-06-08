@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title><%= $title %></title> 
   <link rel="shortcut icon" href="/img/favicon.ico">
-  <link rel="stylesheet" href="/css/print.css?v=021">
+  <link rel="stylesheet" href="/css/print.css?v=022">
 </head>
 <body onload="window.print()">
 <body>

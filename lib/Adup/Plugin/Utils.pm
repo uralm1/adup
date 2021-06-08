@@ -73,6 +73,35 @@ sub register {
     return $task_id;
   });
 
+  # 1/undef = $self->can_start_task()
+  # 1/undef = $self->can_start_task(sub { say $_ })
+  $app->helper(can_start_task => sub {
+    my ($self, $reporting_cb) = @_;
+    croak 'Bad parameter' if $reporting_cb and ref $reporting_cb ne 'CODE';
+    my $app = $self->app;
+
+    if ($app->check_workers) {
+      # concurrency checks
+      my $task_ids = {
+        preprocess => 'preprocess_id',
+        sync => 'sync_id',
+        merge => 'merge_id'
+      };
+
+      for (keys %$task_ids) {
+        if ($app->db_task_id($task_ids->{$_}) != 0) {
+          $reporting_cb->($_) if $reporting_cb;
+          return undef;
+        }
+      }
+      return 1;
+    } else {
+      $_ = '';
+      $reporting_cb->($_) if $reporting_cb;
+      return undef;
+    }
+  });
+
   # my $task_id = $self->check_task_in_progress('preprocess_id', 'utid')
   $app->helper(check_task_in_progress => sub {
     my ($self, $k, $sesk) = @_;
@@ -80,15 +109,15 @@ sub register {
     my $s_id = $self->session($sesk);
     if ($task_id == 0) {
       unless (defined $s_id) {
-	$task_id = undef; # start
+        $task_id = undef; # start
       } else {
-	$task_id = $s_id if $s_id > 0; # wait after task start
-	# finished
+        $task_id = $s_id if $s_id > 0; # wait after task start
+        # finished
       }
     } else {
       # task_id > 0, we should always wait
       if (defined $s_id and $s_id == 0) {
-	$self->session($sesk => $task_id); #some erratic behavior
+        $self->session($sesk => $task_id); #some erratic behavior
       }
     }
     return $task_id;

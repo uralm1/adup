@@ -6,37 +6,30 @@
 %   end
 % }
 <div class="scont">
-  <h5>Загрузка файла Persons из ИС "Галактика"</h5>
+  <h5>Загрузка сведений о персонале из 1С "ЗУП"</h5>
 % unless (defined $upload_task_id) {
-<p>Укажите местоположение DBF файла (максимум до 16МБ) и нажмите "Загрузить".<br>
-Проверка на соответствие формату будет произведена автоматически.<br>
-% if (config 'smbload_schedules') {
+<p>Ручная загрузка сведений о персонале из конфигурации 1С "Зарплата и управление персоналом 8".<br>
+<b>Параметры загрузки</b><br>
+<b>Огранизация:</b>&nbsp;<%= config '1c_org_name' %><br>
+<b>OData сервер:</b>&nbsp;<%= config '1c_url' %><br>
+% if (config '1cload_schedules') {
 *&nbsp;Внимание:&nbsp;помимо ручной загрузки, выполняется автоматическая загрузка данных по расписанию.
 % }
 </p>
 % } elsif ($upload_task_id == 0) {
-<p><b>Обработка файла завершена. Благодарим за работу.</b><br>
+<p><b>Загрузка завершена. Благодарим за работу.</b><br>
 Повторить загрузку можно ниже.</p>
 % }
 % if (!defined $upload_task_id || $upload_task_id == 0) {
   <div class="row">
     <div class="col s8">
-      %= form_for upload => (method => 'POST', enctype => 'multipart/form-data') => begin
-	<div class="file-field input-field">
-	  <div class="btn">
-	    <span>Выбор</span>
-	    <input type="file" name="personsdb">
-	  </div>
-	  <div class="file-path-wrapper">
-	    <input class="file-path validate" type="text" placeholder="Выберите файл выгрузки">
-	  </div>
-	</div>
-	<button class="btn waves-effect waves-light" type="submit"><i class="material-icons left">get_app</i>Загрузить</button>
+      %= form_for zupload => (method => 'POST') => begin
+	<button class="btn waves-effect waves-light" type="submit"><i class="material-icons left">get_app</i>Запустить загрузку</button>
       % end
     </div>
   </div>
 % } else {
-  <p>Выполняется проверка и обработка файла выгрузки (3-4 минуты). Ожидайте завершения.</p>
+  <p>Выполняется проверка и обработка данных (3-4 минуты). Ожидайте завершения.</p>
   <div class="row">
     <div class="col s7">
       <div class="progress">
@@ -51,7 +44,7 @@
 <script>
 function cu(){
   console.log("check!");
-  $.post('/upload/cu', function(d){
+  $.post('/zupload/cu', function(d){
     console.log(d.utid);
     if(d.utid==0){location.reload()}
     if('progress' in d){

@@ -34,34 +34,17 @@ sub _smbload {
   if ($r == 0) {
     $log->l(info=>'Шаблон Persons автоматически скачан с удаленного SMB сервера. Запуск задания постобработки');
 
-    if ($app->check_workers) {
-      # concurrency checks
-      my $upload_task_id = $app->db_task_id('preprocess_id');
-      my $sync_task_id = $app->db_task_id('sync_id');
-      my $merge_task_id = $app->db_task_id('merge_id');
-      if ($sync_task_id == 0 && $merge_task_id == 0 && $upload_task_id == 0) {
-        my $id = $app->minion->enqueue(preprocess => ['automatic']);
-        # there is no session
-        $app->log->info("Finish $$: ".$job->id);
-        $job->finish;
-        return 0;
-
-      } elsif ($upload_task_id > 0) {
-        $app->log->error('Preprocess task is already running. Command cancelled.');
-        $log->l(info=>'Произошла ошибка запуска задания постобработки. Задание постобработки уже запущено, повторный запуск недопустим.', state=>1);
-
-      } elsif ($sync_task_id > 0) {
-        $app->log->error('Sync task is running. Command cancelled. You can repeat your request later.');
-        $log->l(info=>'Произошла ошибка запуска задания постобработки. Работает задание расчёта изменений.', state=>1);
-
-      } elsif ($merge_task_id > 0) {
-        $app->log->error('Merge task is running. Command cancelled. You can repeat your request later.');
-        $log->l(info=>'Произошла ошибка запуска задания постобработки. Работает задание применения изменений.', state=>1);
+    if ($app->can_start_task(
+      sub {
+        $app->log->error("Command cancelled. Execution subsystem error or other task is running: $_.");
+        $log->l(info=>'Произошла ошибка запуска задания постобработки. Недоступна подсистема исполнения или система занята исполнением другого задания.', state=>1);
       }
-
-    } else {
-      $app->log->error('Command cancelled. Execution subsystem error.');
-      $log->l(info=>'Произошла ошибка запуска задания постобработки. Недоступна подсистема исполнения.', state=>1);
+    )) {
+      my $id = $app->minion->enqueue(preprocess => ['automatic']);
+      # there is no session
+      $app->log->info("Finish $$: ".$job->id);
+      $job->finish;
+      return 0;
     }
     #error exit
   }

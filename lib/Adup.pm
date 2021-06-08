@@ -8,7 +8,7 @@ use Adup::Command::resettasks;
 use Adup::Command::smbload;
 use Adup::Command::cron;
 
-our $VERSION = '1.17';
+our $VERSION = '1.18';
 
 # This method will run once at server start
 sub startup {
@@ -89,6 +89,9 @@ sub startup {
   $r->post('/upload')->to('upload#post');#
   $r->post('/upload/cu')->to('upload#check');
 
+  $r->get('/zupload')->to('zupload#index');
+  $r->post('/zupload')->to('zupload#post');#
+
   $r->get('/sync')->to('sync#index');
   $r->post('/sync')->to('sync#post');#
   $r->post('/sync/cu')->to('sync#check');
@@ -138,6 +141,10 @@ sub validate_config {
       $e = "Config parameter $_ is not ARRAY!";
       last;
     }
+  }
+  # only one load schedule is allowed
+  if ($c->{smbload_schedules} && $c->{'1cload_schedules'}) {
+    $e = "Only ONE *load_schedule is allowed! Set unused schdules to undef.";
   }
 
   if ($e) {

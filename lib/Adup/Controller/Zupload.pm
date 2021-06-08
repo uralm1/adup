@@ -1,19 +1,19 @@
-package Adup::Controller::Upload;
+package Adup::Controller::Zupload;
 use Mojo::Base 'Mojolicious::Controller';
 
 use Carp;
 use POSIX qw(ceil);
-use XBase;
 use Mojo::mysql;
 
 sub index {
   my $self = shift;
-  return undef unless $self->authorize({admin=>1, gala=>1});
+  return undef unless $self->authorize({admin=>1, zup1c=>1});
 
   my $log_active_page = $self->param('p') || 1;
   return unless $self->exists_and_number($log_active_page);
 
   # check dbf processing in progress
+  # FIXME
   my $upload_task_id = $self->check_task_in_progress('preprocess_id', 'utid');
 
   # paginated log
@@ -50,67 +50,20 @@ sub index {
   );
 }
 
-
 sub post {
   my $self = shift;
-  return undef unless $self->authorize({admin=>1, gala=>1});
+  return undef unless $self->authorize({admin=>1, zup1c=>1});
 
-  # this seems does not work
-  if ($self->req->is_limit_exceeded) {
-    $self->flash(oper => 'Ошибка! Слишком большой файл.');
-    $self->redirect_to('upload');
-    return undef;
-  }
-  my $upl = $self->param('personsdb');
-  unless ($upl) {
-    $self->flash(oper => 'Ошибка! Неверный параметр.');
-    $self->redirect_to('upload');
-    return undef;
-  }
-  unless ($upl->size) {
-    $self->flash(oper => 'Ошибка! Файл не загружен.');
-    $self->redirect_to('upload');
-    return undef;
-  }
-
-  $upl->move_to($self->config('galdb_temporary_file'));
-
-  my $dbf = eval { new XBase($self->config('galdb_temporary_file')); };
-  if (defined $dbf) {
-    if (join('|', $dbf->field_names, $dbf->field_types, $dbf->field_lengths) ne
-                  $self->config('galdb_fields')) {
-      $self->flash(oper => 'База данных не принята! Неверные типы полей.');
-      $self->redirect_to('upload');
-      return undef;
-    }
-  } else {
-    $self->flash(oper => 'Ошибка! Неверный формат БД.');
-    $self->redirect_to('upload');
-    return undef;
-  }
-
-  $dbf = undef;
-
-  if ($self->can_start_task(
-    sub {
-      if (/^.+/) {
-        $self->flash(oper => 'В настоящий момент уже исполняется другая задача. Повторите попытку запуска позже.');
-      } else {
-        $self->flash(oper => 'Запуск невозможен. Обнаружена неисправность подсистемы исполнения.');
-      }
-    }
-  )) {
-    my $id = $self->minion->enqueue(preprocess => [$self->stash('remote_user')]);
-    $self->session(utid => $id);
-  }
-  #$self->render(text => 'Upload was successful '.$upl->size.' '.$upl->filename);
-  $self->redirect_to('upload');
+  $self->flash(oper => 'TODO');
+  $self->redirect_to('zupload');
+  return undef;
 }
 
 
+=for comment
 sub check {
   my $self = shift;
-  return undef unless $self->authorize({admin=>1, gala=>1});
+  return undef unless $self->authorize({admin=>1, zup1c=>1});
 
   # check dbf processing in progress
   my $task_id = $self->db_task_id('preprocess_id');
@@ -128,5 +81,6 @@ sub check {
   }
   return $self->render(json => {utid => $task_id, progress => $progress, info => $info}, status => 200);
 }
+=cut
 
 1;

@@ -18,13 +18,18 @@ html {
 
 .root-link {
   display:-webkit-box;
-  display:-webkit-flex;
+  display:-webkit-inline-flex;
   display:-ms-flexbox;
-  display:flex;
+  display:inline-flex;
   -webkit-box-align:center;
   -webkit-align-items:center;
   -ms-flex-align:center;
   align-items:center;
+}
+
+.rasp-root-link {
+  margin-left:5px;
+  font-size:13px;
 }
 
 .file-field .btn {

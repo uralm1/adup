@@ -76,23 +76,17 @@ sub post {
   my $self = shift;
   return undef unless $self->authorize({admin=>1});
 
-  if ($self->check_workers) {
-    # concurrency checks
-    my $upload_task_id = $self->db_task_id('preprocess_id');
-    my $sync_task_id = $self->db_task_id('sync_id');
-    my $merge_task_id = $self->db_task_id('merge_id');
-    if ($upload_task_id == 0 && $merge_task_id == 0 && $sync_task_id == 0) {
-      my $id = $self->minion->enqueue(sync => [$self->stash('remote_user')]);
-      $self->session(stid => $id);
-    } elsif ($sync_task_id > 0) {
-      $self->flash(oper => 'Задача расчёта изменений уже работает. Запуск отменён');
-    } elsif ($upload_task_id > 0) {
-      $self->flash(oper => 'В настоящий момент исполняется задача загрузки шаблона. Повторите попытку запуска позже.');
-    } elsif ($merge_task_id > 0) {
-      $self->flash(oper => 'В настоящий момент исполняется задача применения изменений. Повторите попытку запуска позже.');
+  if ($self->can_start_task(
+    sub {
+      if (/^.+/) {
+        $self->flash(oper => 'В настоящий момент уже исполняется другая задача. Повторите попытку запуска позже.');
+      } else {
+        $self->flash(oper => 'Запуск невозможен. Обнаружена неисправность подсистемы исполнения.');
+      }
     }
-  } else {
-    $self->flash(oper => 'Запуск невозможен. Обнаружена неисправность подсистемы исполнения.');
+  )) {
+    my $id = $self->minion->enqueue(sync => [$self->stash('remote_user')]);
+    $self->session(stid => $id);
   }
   $self->redirect_to('sync');
 }
