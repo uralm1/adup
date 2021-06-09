@@ -38,7 +38,7 @@ sub register {
 
   # $self->authorize($self->allow_all_roles);
   $app->helper(allow_all_roles => sub {
-    { admin=>1, gala=>1, room=>1, phone=>1, sot=>1, photo=>1 };
+    { admin=>1, gala=>1, zup1c=>1, room=>1, phone=>1, sot=>1, photo=>1 };
   });
 
 
@@ -84,6 +84,7 @@ sub register {
       # concurrency checks
       my $task_ids = {
         preprocess => 'preprocess_id',
+        zupprocess => 'zupprocess_id',
         sync => 'sync_id',
         merge => 'merge_id'
       };

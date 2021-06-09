@@ -12,9 +12,8 @@ sub index {
   my $log_active_page = $self->param('p') || 1;
   return unless $self->exists_and_number($log_active_page);
 
-  # check dbf processing in progress
-  # FIXME
-  my $upload_task_id = $self->check_task_in_progress('preprocess_id', 'utid');
+  # check zup loading in progress
+  my $zupprocess_task_id = $self->check_task_in_progress('zupprocess_id', 'ztid');
 
   # paginated log
   my $lines_on_page = $self->config('log_lines_on_page');
@@ -42,7 +41,7 @@ sub index {
   return $self->render(text => 'Ошибка операции с БД') unless defined $e;
 
   $self->render(
-    upload_task_id => $upload_task_id, # undef, 0, >0
+    zupprocess_task_id => $zupprocess_task_id, # undef, 0, >0
     log_lines_total => $lines_total,
     log_num_pages => $num_pages,
     log_active_page => $log_active_page,
@@ -54,23 +53,32 @@ sub post {
   my $self = shift;
   return undef unless $self->authorize({admin=>1, zup1c=>1});
 
-  $self->flash(oper => 'TODO');
+  if ($self->can_start_task(
+    sub {
+      if (/^.+/) {
+        $self->flash(oper => 'В настоящий момент уже исполняется другая задача. Повторите попытку запуска позже.');
+      } else {
+        $self->flash(oper => 'Запуск невозможен. Обнаружена неисправность подсистемы исполнения.');
+      }
+    }
+  )) {
+    my $id = $self->minion->enqueue(zupprocess => [$self->stash('remote_user')]);
+    $self->session(ztid => $id);
+  }
   $self->redirect_to('zupload');
-  return undef;
 }
 
 
-=for comment
 sub check {
   my $self = shift;
   return undef unless $self->authorize({admin=>1, zup1c=>1});
 
-  # check dbf processing in progress
-  my $task_id = $self->db_task_id('preprocess_id');
+  # check zup loading in progress
+  my $task_id = $self->db_task_id('zupprocess_id');
   my $progress = 0;
   my $info = '';
   if ($task_id == 0) {
-    $self->session(utid => 0) if defined $self->session('utid');
+    $self->session(ztid => 0) if defined $self->session('ztid');
   } else {
     if (my $j = $self->minion->job($task_id)) {
       $progress = $j->info->{notes}{progress};
@@ -79,8 +87,7 @@ sub check {
     $progress = 0 unless defined $progress;
     $info = '' unless defined $info;
   }
-  return $self->render(json => {utid => $task_id, progress => $progress, info => $info}, status => 200);
+  return $self->render(json => {ztid => $task_id, progress => $progress, info => $info}, status => 200);
 }
-=cut
 
 1;

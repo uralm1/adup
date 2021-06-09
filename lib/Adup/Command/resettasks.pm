@@ -11,7 +11,7 @@ sub run {
   my $app = $self->app;
   my $db = $app->mysql_adup->db;
 
-  $app->reset_task_state($db, $_) for (qw/preprocess_id sync_id merge_id/);
+  $app->reset_task_state($db, $_) for (qw/preprocess_id zupprocess_id sync_id merge_id/);
   say 'Tasks states were cleaned up.';
 
   return 1;

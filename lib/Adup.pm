@@ -41,6 +41,7 @@ sub startup {
   $self->plugin('Adup::Plugin::Migrations');
 
   $self->plugin('Adup::Task::Preprocess');
+  $self->plugin('Adup::Task::Zupprocess');
   $self->plugin('Adup::Task::Sync');
   $self->plugin('Adup::Task::Merge');
   $self->plugin('Adup::Task::SmbLoad');
@@ -91,6 +92,7 @@ sub startup {
 
   $r->get('/zupload')->to('zupload#index');
   $r->post('/zupload')->to('zupload#post');#
+  $r->post('/zupload/cu')->to('zupload#check');
 
   $r->get('/sync')->to('sync#index');
   $r->post('/sync')->to('sync#post');#

@@ -7,7 +7,7 @@
 % }
 <div class="scont">
   <h5>Загрузка сведений о персонале из 1С "ЗУП"</h5>
-% unless (defined $upload_task_id) {
+% unless (defined $zupprocess_task_id) {
 <p>Ручная загрузка сведений о персонале из конфигурации 1С "Зарплата и управление персоналом 8".<br>
 <b>Параметры загрузки</b><br>
 <b>Огранизация:</b>&nbsp;<%= config '1c_org_name' %><br>
@@ -16,11 +16,11 @@
 *&nbsp;Внимание:&nbsp;помимо ручной загрузки, выполняется автоматическая загрузка данных по расписанию.
 % }
 </p>
-% } elsif ($upload_task_id == 0) {
+% } elsif ($zupprocess_task_id == 0) {
 <p><b>Загрузка завершена. Благодарим за работу.</b><br>
 Повторить загрузку можно ниже.</p>
 % }
-% if (!defined $upload_task_id || $upload_task_id == 0) {
+% if (!defined $zupprocess_task_id || $zupprocess_task_id == 0) {
   <div class="row">
     <div class="col s8">
       %= form_for zupload => (method => 'POST') => begin
@@ -29,7 +29,7 @@
     </div>
   </div>
 % } else {
-  <p>Выполняется проверка и обработка данных (3-4 минуты). Ожидайте завершения.</p>
+  <p>Выполняется загрузка и обработка данных (3-4 минуты). Ожидайте завершения.</p>
   <div class="row">
     <div class="col s7">
       <div class="progress">
@@ -37,7 +37,7 @@
       </div>
     </div>
     <div class="col s5">
-      <div class="info-progress" id="info">Запускается задание постобработки после загрузки</div>
+      <div class="info-progress" id="info">Запускается задание загрузки данных</div>
     </div>
   </div>
 % content_with task_update => begin
@@ -45,8 +45,8 @@
 function cu(){
   console.log("check!");
   $.post('/zupload/cu', function(d){
-    console.log(d.utid);
-    if(d.utid==0){location.reload()}
+    console.log(d.ztid);
+    if(d.ztid==0){location.reload()}
     if('progress' in d){
       console.log(d.progress+'%');
       if($('#progress').hasClass('indeterminate')){
@@ -93,5 +93,4 @@ setInterval(cu,2000);
   </table>
   %= m_page_nav($log_active_page, $log_num_pages, {round=>3, outer=>1, start=>1, class=>'center-align', param=>'p', query=>'#log'});
 </div>
-
 

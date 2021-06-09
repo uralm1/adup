@@ -182,3 +182,10 @@ CREATE TABLE IF NOT EXISTS `changelog` (
   PRIMARY KEY (`ver_major`,`ver_minor`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+-- 4 up
+INSERT INTO `state` (`key`, `value`) VALUES
+('zupprocess_id', 0);
+
+-- 4 down
+DELETE FROM `state` WHERE `key` = 'zupprocess_id';
+
