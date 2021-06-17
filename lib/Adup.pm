@@ -6,9 +6,10 @@ use Adup::Command::sync;
 use Adup::Command::merge;
 use Adup::Command::resettasks;
 use Adup::Command::smbload;
+use Adup::Command::zupload;
 use Adup::Command::cron;
 
-our $VERSION = '1.18';
+our $VERSION = '1.19';
 
 # This method will run once at server start
 sub startup {
@@ -51,6 +52,9 @@ sub startup {
 
   # update database
   $self->migrate_database;
+
+  # Reset locks
+  $self->minion->on(worker => sub { shift->reset({locks=>1}) });
 
   # Router authentication routine
   $self->hook(before_dispatch => sub {

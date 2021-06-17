@@ -15,6 +15,12 @@ sub _smbload {
   my $job = shift;
   my $app = $job->app;
 
+  my $guard = $job->minion->guard('upload_job_guard', 3600);
+  unless ($guard) {
+    $app->log->error("Exited smbload $$: ".$job->id.'. Other concurrent job is active.');
+    return $job->finish('Other concurrent job is active');
+  }
+
   $app->log->info("Start smbload $$: ".$job->id);
 
   # download file via smbclient

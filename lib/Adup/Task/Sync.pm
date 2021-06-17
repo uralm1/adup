@@ -46,31 +46,39 @@ sub register {
 # internal
 sub _sync {
   my ($job, $remote_user) = @_;
+  my $app = $job->app;
 
-  $job->app->log->info("Start sync $$: ".$job->id);
-  my $db_adup = $job->app->mysql_adup->db;
+  my $guard = $job->minion->guard('upload_job_guard', 3600);
+  my $guard1 = $job->minion->guard('sync_job_guard', 3600);
+  unless ($guard && $guard1) {
+    $app->log->error("Exited sync $$: ".$job->id.'. Other concurrent job is active.');
+    return $job->finish('Other concurrent job is active');
+  }
+
+  $app->log->info("Start sync $$: ".$job->id);
+  my $db_adup = $app->mysql_adup->db;
 
   my $log = Adup::Ural::Dblog->new($db_adup, login=>$remote_user, state=>10);
 
-  my $ldap = Net::LDAP->new($job->app->config->{ldap_servers}, port => 389, timeout => 10, version => 3);
+  my $ldap = Net::LDAP->new($app->config->{ldap_servers}, port => 389, timeout => 10, version => 3);
   unless ($ldap) {
     $log->l(state=>11, info=>"Произошла ошибка подключения к глобальному каталогу");
     return $job->fail("LDAP creation error $@");
   }
 
-  my $mesg = $ldap->bind($job->app->config->{ldap_user}, password => $job->app->config->{ldap_pass});
+  my $mesg = $ldap->bind($app->config->{ldap_user}, password => $app->config->{ldap_pass});
   if ($mesg->code) {
     $log->l(state=>11, info=>"Произошла ошибка авторизации при подключении к глобальному каталогу");
     return $job->fail("LDAP bind error ".$mesg->error);
   }
 
-  $job->app->set_task_state($db_adup, $TASK_ID, $job->id);
+  $app->set_task_state($db_adup, $TASK_ID, $job->id);
 
   my $e = eval {
     $db_adup->query("DELETE FROM changes");
   };
   unless (defined $e) {
-    $job->app->reset_task_state($db_adup, $TASK_ID);
+    $app->reset_task_state($db_adup, $TASK_ID);
     $ldap->unbind;
     return $job->fail('Changes table cleanup error');
   }
@@ -87,7 +95,7 @@ sub _sync {
       pos => $idx
     );
     unless (defined $c) {
-      $job->app->reset_task_state($db_adup, $TASK_ID);
+      $app->reset_task_state($db_adup, $TASK_ID);
       $ldap->unbind;
       return $job->fail("$seq_el->{name} fatal error");
     }
@@ -98,9 +106,9 @@ sub _sync {
       $check ||= $SYNC_SEQUENCE[$_]->{_result} > 0 for @{$seq_el->{pre_stop}};
       if ($check) {
         $log->l(info => $seq_el->{pre_stop_msg});
-        $job->app->reset_task_state($db_adup, $TASK_ID);
+        $app->reset_task_state($db_adup, $TASK_ID);
         $ldap->unbind;
-        $job->app->log->info("Pre-finish $$: ".$job->id);
+        $app->log->info("Pre-finish $$: ".$job->id);
         return $job->finish;
       }
     }
@@ -109,10 +117,10 @@ sub _sync {
   }
   # done
 
-  $job->app->reset_task_state($db_adup, $TASK_ID);
+  $app->reset_task_state($db_adup, $TASK_ID);
   $ldap->unbind;
 
-  $job->app->log->info("Finish $$: ".$job->id);
+  $app->log->info("Finish $$: ".$job->id);
   $job->finish;
 }
 

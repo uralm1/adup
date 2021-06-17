@@ -25,6 +25,12 @@ sub _load_zup {
   my ($job, $remote_user) = @_;
   my $app = $job->app;
 
+  my $guard = $job->minion->guard('upload_job_guard', 3600);
+  unless ($guard) {
+    $app->log->error("Exited zupprocess $$: ".$job->id.'. Other concurrent job is active.');
+    return $job->finish('Other concurrent job is active');
+  }
+
   $app->log->info("Start zupprocess $$: ".$job->id);
   my $db_adup = $app->mysql_adup->db;
 
@@ -33,7 +39,7 @@ sub _load_zup {
   $app->set_task_state($db_adup, $TASK_ID, $job->id);
 
   my $loader = eval {
-    Adup::Ural::ZupLoader->new($job->app, $db_adup,
+    Adup::Ural::ZupLoader->new($app, $db_adup,
       sub { $job->note(progress => shift, info => shift) }
     )
   };
@@ -42,11 +48,6 @@ sub _load_zup {
     $app->reset_task_state($db_adup, $TASK_ID);
     return $job->finish('Failed: bad server url');
   }
-
-  #$job->note(
-  #  progress => 0,
-  #  info => "0% Соединение с сервером..."
-  #);
 
   my @load_results;
   eval {

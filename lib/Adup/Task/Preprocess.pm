@@ -26,18 +26,25 @@ sub register {
 # internal
 sub _process_dbf {
   my ($job, $remote_user) = @_;
+  my $app = $job->app;
 
-  $job->app->log->info("Start preprocess $$: ".$job->id);
-  my $db_adup = $job->app->mysql_adup->db;
+  my $guard = $job->minion->guard('upload_job_guard', 3600);
+  unless ($guard) {
+    $app->log->error("Exited preprocess $$: ".$job->id.'. Other concurrent job is active.');
+    return $job->finish('Other concurrent job is active');
+  }
+
+  $app->log->info("Start preprocess $$: ".$job->id);
+  my $db_adup = $app->mysql_adup->db;
 
   my $log = Adup::Ural::Dblog->new($db_adup, login=>$remote_user, state=>0);
 
-  $job->app->set_task_state($db_adup, $TASK_ID, $job->id);
+  $app->set_task_state($db_adup, $TASK_ID, $job->id);
 
-  my $dbf = eval { new XBase($job->app->config('galdb_temporary_file')) };
+  my $dbf = eval { new XBase($app->config('galdb_temporary_file')) };
   unless (defined $dbf) {
     $log->l(state => 1, info => "Произошла ошибка обработки файла выгрузки");
-    $job->app->reset_task_state($db_adup, $TASK_ID);
+    $app->reset_task_state($db_adup, $TASK_ID);
     return $job->fail('XBase object creation failed');
   }
 
@@ -47,7 +54,7 @@ sub _process_dbf {
     $db_adup->query("DELETE FROM flatdepts");
   };
   unless (defined $e) {
-    $job->app->reset_task_state($db_adup, $TASK_ID);
+    $app->reset_task_state($db_adup, $TASK_ID);
     return $job->fail('Tables cleanup error');
   }
 
@@ -133,7 +140,7 @@ sub _process_dbf {
       };
       unless (defined $e) {
         $log->l(state => 1, info => "Произошла ошибка записи таблицы persons, $loaded_cnt сотрудников обработано");
-        $job->app->reset_task_state($db_adup, $TASK_ID);
+        $app->reset_task_state($db_adup, $TASK_ID);
         return $job->fail('Mysql insert to table persons error');
       }
       $loaded_cnt++;
@@ -161,7 +168,7 @@ sub _process_dbf {
       };
       unless (defined $e) {
         $log->l(state => 1, info => "Произошла ошибка обновления дубликатов в таблице persons, $loaded_cnt сотрудников обработано");
-        $job->app->reset_task_state($db_adup, $TASK_ID);
+        $app->reset_task_state($db_adup, $TASK_ID);
         return $job->fail('Mysql update dublicates in table persons error');
       }
     }
@@ -192,7 +199,7 @@ sub _process_dbf {
     };
     unless (defined $e) {
       $log->l(state => 1, info => "Произошла ошибка записи таблицы подразделений");
-      $job->app->reset_task_state($db_adup, $TASK_ID);
+      $app->reset_task_state($db_adup, $TASK_ID);
       return $job->fail('Mysql insert to table depts error');
     }
     $dept_loaded_cnt++;
@@ -219,7 +226,7 @@ sub _process_dbf {
     };
     unless (defined $e) {
       $log->l(state => 1, info => "Произошла ошибка записи подразделений в плоском формате");
-      $job->app->reset_task_state($db_adup, $TASK_ID);
+      $app->reset_task_state($db_adup, $TASK_ID);
       return $job->fail('Mysql insert to table flatdepts error');
     }
     $flatdept_loaded_cnt++;
@@ -230,9 +237,9 @@ sub _process_dbf {
 
   $log->l(info => "Загружен шаблон ИС \"Галактика\" с информацией по $loaded_cnt сотрудникам и выполнен разбор оргструктуры по $dept_loaded_cnt/$flatdept_loaded_cnt подразделениям");
 
-  $job->app->reset_task_state($db_adup, $TASK_ID);
+  $app->reset_task_state($db_adup, $TASK_ID);
 
-  $job->app->log->info("Finish $$: ".$job->id);
+  $app->log->info("Finish $$: ".$job->id);
   $job->finish;
 }
 

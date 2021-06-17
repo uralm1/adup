@@ -38,25 +38,32 @@ sub register {
 # internal
 sub _merge {
   my ($job, $remote_user) = @_;
+  my $app = $job->app;
 
-  $job->app->log->info("Start merge $$: ".$job->id);
-  my $db_adup = $job->app->mysql_adup->db;
+  my $guard = $job->minion->guard('sync_job_guard', 3600);
+  unless ($guard) {
+    $app->log->error("Exited merge $$: ".$job->id.'. Other concurrent job is active.');
+    return $job->finish('Other concurrent job is active');
+  }
+
+  $app->log->info("Start merge $$: ".$job->id);
+  my $db_adup = $app->mysql_adup->db;
 
   my $log = Adup::Ural::Dblog->new($db_adup, login=>$remote_user, state=>90);
 
-  my $ldap = Net::LDAP->new($job->app->config->{ldap_servers}, port => 389, timeout => 10, version => 3);
+  my $ldap = Net::LDAP->new($app->config->{ldap_servers}, port => 389, timeout => 10, version => 3);
   unless ($ldap) {
     $log->l(state=>91, info=>"Произошла ошибка подключения к глобальному каталогу");
     return $job->fail("LDAP creation error $@");
   }
 
-  my $mesg = $ldap->bind($job->app->config->{ldap_user}, password => $job->app->config->{ldap_pass});
+  my $mesg = $ldap->bind($app->config->{ldap_user}, password => $app->config->{ldap_pass});
   if ($mesg->code) {
     $log->l(state=>91, info=>"Произошла ошибка авторизации при подключении к глобальному каталогу");
     return $job->fail("LDAP bind error ".$mesg->error);
   }
 
-  $job->app->set_task_state($db_adup, $TASK_ID, $job->id);
+  $app->set_task_state($db_adup, $TASK_ID, $job->id);
 
   # merging changes for types ... in sequence
   # see type_robotic field in change objects
@@ -100,7 +107,7 @@ sub _merge {
         ORDER BY $m_order_tmpl id ASC", $mt);
     };
     unless (defined $e) {
-      $job->app->reset_task_state($db_adup, $TASK_ID);
+      $app->reset_task_state($db_adup, $TASK_ID);
       return $job->fail('Merge - database fatal error');
     }
     my $changes_count = 0;
@@ -111,7 +118,7 @@ sub _merge {
     while (my $next = $res->hash) {
       my $c = Adup::Ural::ChangeFactory->fromdb(id=>$next->{id}, json=>$next->{c});
       if ($c->approved) {
-	if ($c->merge(author=>$remote_user, db=>$db_adup, ldap=>$ldap, config=>$job->app->config, log=>$log)) {
+	if ($c->merge(author=>$remote_user, db=>$db_adup, ldap=>$ldap, config=>$app->config, log=>$log)) {
 	  $changes_processed_count++;
 	} else {
 	  $log->l(state=>91, info=>"Изменение-$seq_el->{desc} не применено. Возникла ошибка при применении изменения-$seq_el->{desc}: $next->{name}.");
@@ -146,10 +153,10 @@ sub _merge {
 
   $log->l(info => 'Отчёт о применении изменений. '.$log_buf) if $log_buf;
 
-  $job->app->reset_task_state($db_adup, $TASK_ID);
+  $app->reset_task_state($db_adup, $TASK_ID);
   $ldap->unbind;
 
-  $job->app->log->info("Finish $$: ".$job->id);
+  $app->log->info("Finish $$: ".$job->id);
   $job->finish;
 }
 
