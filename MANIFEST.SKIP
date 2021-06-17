@@ -1,5 +1,6 @@
 \badup.conf$
 \btest.conf$
+\.pem$
 
 #!start included /usr/share/perl/5.30/ExtUtils/MANIFEST.SKIP
 # Avoid version control files.

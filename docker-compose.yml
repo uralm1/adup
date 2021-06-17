@@ -31,6 +31,9 @@ services:
     container_name: adup
     volumes:
       - /srv/adup/adup.conf:/opt/adup/adup.conf:ro
+      - /srv/adup/adup-cert.pem:/opt/adup/adup-cert.pem:ro
+      - /srv/adup/adup-key.pem:/opt/adup/adup-key.pem:ro
+      - /srv/adup/ca.pem:/opt/adup/ca.pem:ro
       - tmp:/opt/adup/tmp
       - public:/opt/adup/public
     environment:
@@ -44,6 +47,9 @@ services:
     container_name: adup-minion
     volumes:
       - /srv/adup/adup.conf:/opt/adup/adup.conf:ro
+      - /srv/adup/adup-cert.pem:/opt/adup/adup-cert.pem:ro
+      - /srv/adup/adup-key.pem:/opt/adup/adup-key.pem:ro
+      - /srv/adup/ca.pem:/opt/adup/ca.pem:ro
       - tmp:/opt/adup/tmp
     environment:
       - TZ=Asia/Yekaterinburg
@@ -56,6 +62,9 @@ services:
     container_name: adup-cron
     volumes:
       - /srv/adup/adup.conf:/opt/adup/adup.conf:ro
+      - /srv/adup/adup-cert.pem:/opt/adup/adup-cert.pem:ro
+      - /srv/adup/adup-key.pem:/opt/adup/adup-key.pem:ro
+      - /srv/adup/ca.pem:/opt/adup/ca.pem:ro
       - tmp:/opt/adup/tmp
     environment:
       - TZ=Asia/Yekaterinburg

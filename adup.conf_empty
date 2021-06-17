@@ -41,20 +41,20 @@
   smb_pass => 'pass',
   smb_dom => 'DOMAIN',
 
-  '1c_url' => 'http://server/zup_base',
+  zup_url => 'http://server/zup_base',
   # set to undef to disable odata authentication
-  '1c_auth' => 'user:pass',
+  zup_auth => 'user:pass',
   # certificates for secure odata connection or undef
-  '1c_ca' => '../cert/ca.pem',
-  '1c_cert' => '../cert/localhost-cert.pem',
-  '1c_key' => '../cert/localhost-key.pem',
-  '1c_org_name' => 'MY FIRM',
+  zup_ca => 'ca.pem',
+  zup_cert => 'adup-cert.pem',
+  zup_key => 'adup-key.pem',
+  zup_org_name => 'MY FIRM',
 
   # only one schedule should be defined!
   # set to undef to disable scheduling
   smbload_schedules => [ '3 21 * * *' ],
 
-  '1cload_schedules' => undef,
+  zupload_schedules => undef,
   #####
 
   help_url => 'https://faq.contoso.com/doku.php?id=adup',

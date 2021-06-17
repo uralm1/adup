@@ -50,12 +50,12 @@
 % content_with task_update => begin
 <script>
 function cu(){
-  console.log("check!");
+  console.debug("check!");
   $.post('/upload/cu', function(d){
-    console.log(d.utid);
+    console.debug(d.utid);
     if(d.utid==0){location.reload()}
     if('progress' in d){
-      console.log(d.progress+'%');
+      console.debug(d.progress+'%');
       if($('#progress').hasClass('indeterminate')){
         $('#progress').removeClass('indeterminate').addClass('determinate');
       }

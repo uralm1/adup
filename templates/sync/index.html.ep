@@ -66,12 +66,12 @@
 % content_with task_update => begin
 <script>
 function cu(){
-  console.log("check sync!");
+  console.debug("check sync!");
   $.post('/sync/cu', function(d){
-    console.log(d.stid);
+    console.debug(d.stid);
     if(d.stid==0){location.reload()}
     if('progress' in d){
-      console.log(d.progress+'%');
+      console.debug(d.progress+'%');
       if($('#progress').hasClass('indeterminate')){
         $('#progress').removeClass('indeterminate').addClass('determinate');
       }
@@ -101,12 +101,12 @@ setInterval(cu,2000);
 % content_with task_update => begin
 <script>
 function cu(){
-  console.log("check merge!");
+  console.debug("check merge!");
   $.post('/sync/merge/cu', function(d){
-    console.log(d.mtid);
+    console.debug(d.mtid);
     if(d.mtid==0){location.reload()}
     if('progress' in d){
-      console.log(d.progress+'%');
+      console.debug(d.progress+'%');
       if($('#progress').hasClass('indeterminate')){
         $('#progress').removeClass('indeterminate').addClass('determinate');
       }

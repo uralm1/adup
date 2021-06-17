@@ -189,3 +189,9 @@ INSERT INTO `state` (`key`, `value`) VALUES
 -- 4 down
 DELETE FROM `state` WHERE `key` = 'zupprocess_id';
 
+-- 5 up
+ALTER TABLE `persons` CHANGE `gal_id` `gal_id` VARCHAR(36) NOT NULL;
+
+-- 5 down
+ALTER TABLE `persons` CHANGE `gal_id` `gal_id` VARCHAR(20) NOT NULL;
+

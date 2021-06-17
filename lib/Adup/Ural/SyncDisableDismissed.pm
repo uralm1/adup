@@ -17,18 +17,20 @@ use Adup::Ural::Dblog;
 #   ldap => $ldap,
 #   log => $log,
 #   job => $job,
-#   user => $remote_user
+#   user => $remote_user,
+#   pos => 6
 # );
 sub do_sync {
   my (%args) = @_;
-  for (qw/db ldap log job user/) { croak 'Required parameters missing' unless defined $args{$_}};
+  for (qw/db ldap log job user pos/) { croak 'Required parameters missing' unless defined $args{$_}};
   say "in SyncDisableDismissed subtask";
 
   my $dismissed_ldapbase = $args{job}->app->config->{dismissed_ou_dn};
   my $pmsg = 'Проверка, все ли архивные учетные записи отключены';
+  my $percent = ceil($args{pos} * $args{job}->app->percent_sync_task);
   $args{job}->note(
-    progress => 0,
-    info => "0% $pmsg",
+    progress => $percent,
+    info => "$percent% $pmsg",
   );
 
   #
@@ -93,9 +95,10 @@ sub do_sync {
     return undef;
   }
 
+  $percent = int(($args{pos} + 1) * $args{job}->app->percent_sync_task);
   $args{job}->note(
-    progress => 100,
-    info => "100% $pmsg",
+    progress => $percent,
+    info => "$percent% $pmsg",
   );
 
   $args{log}->l(info => "Проверка блокирования архивных учётных записей. Создано $delete_changes_count изменений блокирования архивных учётных записей.");

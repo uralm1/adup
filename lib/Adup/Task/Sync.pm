@@ -21,9 +21,24 @@ my $TASK_ID = 'sync_id';
 # $TASK_LOG_STATE_SUCCESS = 10;
 # $TASK_LOG_STATE_ERROR = 11;
 
+my @SYNC_SEQUENCE = (
+  { name => 'SyncCreateOUs', ref => \&Adup::Ural::SyncCreateOUs::do_sync },
+  { name => 'SyncCreateFlatGroups', ref => \&Adup::Ural::SyncCreateFlatGroups::do_sync,
+    pre_stop => [0, 1],
+    pre_stop_msg => 'Проведена неполная предварительная синхронизация. Примените изменения создания подразделений и групп, затем перезапустите задание расчета изменений для полной синхронизации.',
+  },
+  { name => 'SyncAttributesCreateMoveUsers', ref => \&Adup::Ural::SyncAttributesCreateMoveUsers::do_sync },
+  { name => 'SyncDeleteFlatGroups', ref => \&Adup::Ural::SyncDeleteFlatGroups::do_sync },
+  { name => 'SyncDeleteUsers', ref => \&Adup::Ural::SyncDeleteUsers::do_sync },
+  { name => 'SyncDeleteOUs', ref => \&Adup::Ural::SyncDeleteOUs::do_sync },
+  { name => 'SyncDisableDismissed', ref => \&Adup::Ural::SyncDisableDismissed::do_sync },
+);
 
 sub register {
   my ($self, $app) = @_;
+
+  $app->helper(percent_sync_task => sub { 100 / scalar @SYNC_SEQUENCE });
+
   $app->minion->add_task(sync => \&_sync);
 }
 
@@ -56,116 +71,43 @@ sub _sync {
   };
   unless (defined $e) {
     $job->app->reset_task_state($db_adup, $TASK_ID);
+    $ldap->unbind;
     return $job->fail('Changes table cleanup error');
   }
 
-  #
-  # SyncCreateOUs subtask
-  #
-  my $c1 = 0;
-  my $c2 = 0;
-  unless (defined ($c1 = Adup::Ural::SyncCreateOUs::do_sync(
-    db => $db_adup,
-    ldap => $ldap,
-    log => $log,
-    job => $job,
-    user => $remote_user
-  ))) {
-    $job->app->reset_task_state($db_adup, $TASK_ID);
-    return $job->fail('SyncCreateOUs fatal error');
-  }
+  # Run subtasks
+  my $idx = 0;
+  for my $seq_el (@SYNC_SEQUENCE) {
+    my $c = $seq_el->{ref}->(
+      db => $db_adup,
+      ldap => $ldap,
+      log => $log,
+      job => $job,
+      user => $remote_user,
+      pos => $idx
+    );
+    unless (defined $c) {
+      $job->app->reset_task_state($db_adup, $TASK_ID);
+      $ldap->unbind;
+      return $job->fail("$seq_el->{name} fatal error");
+    }
+    $seq_el->{_result} = $c;
 
-  #
-  # SyncCreateFlatGroups subtask
-  #
-  unless (defined ($c2 = Adup::Ural::SyncCreateFlatGroups::do_sync(
-    db => $db_adup,
-    ldap => $ldap,
-    log => $log,
-    job => $job,
-    user => $remote_user,
-  ))) {
-    $job->app->reset_task_state($db_adup, $TASK_ID);
-    return $job->fail('SyncCreateFlatGroups fatal error');
-  }
+    if ($seq_el->{pre_stop}) {
+      my $check = 0;
+      $check ||= $SYNC_SEQUENCE[$_]->{_result} > 0 for @{$seq_el->{pre_stop}};
+      if ($check) {
+        $log->l(info => $seq_el->{pre_stop_msg});
+        $job->app->reset_task_state($db_adup, $TASK_ID);
+        $ldap->unbind;
+        $job->app->log->info("Pre-finish $$: ".$job->id);
+        return $job->finish;
+      }
+    }
 
-  if ($c1 > 0 || $c2 > 0) {
-    $log->l(info=>"Проведена неполная предварительная синхронизация. Примените изменения создания подразделений и групп, затем перезапустите задание расчета изменений для полной синхронизации.");
-    $job->app->reset_task_state($db_adup, $TASK_ID);
-    $ldap->unbind;
-    say "pre-finish $$: ".$job->id;
-    return $job->finish;
+    $idx++;
   }
-
-  #
-  # SyncAttributesCreateMoveUsers subtask
-  #
-  unless (defined Adup::Ural::SyncAttributesCreateMoveUsers::do_sync(
-    db => $db_adup,
-    ldap => $ldap,
-    log => $log,
-    job => $job,
-    user => $remote_user,
-  )) {
-    $job->app->reset_task_state($db_adup, $TASK_ID);
-    return $job->fail('SyncAttributesCreateMoveUsers fatal error');
-  }
-
-  #
-  # SyncDeleteFlatGroups subtask
-  #
-  unless (defined Adup::Ural::SyncDeleteFlatGroups::do_sync(
-    db => $db_adup,
-    ldap => $ldap,
-    log => $log,
-    job => $job,
-    user => $remote_user,
-  )) {
-    $job->app->reset_task_state($db_adup, $TASK_ID);
-    return $job->fail('SyncDeleteFlatGroups fatal error');
-  }
-
-  #
-  # SyncDeleteUsers subtask
-  #
-  unless (defined Adup::Ural::SyncDeleteUsers::do_sync(
-    db => $db_adup,
-    ldap => $ldap,
-    log => $log,
-    job => $job,
-    user => $remote_user,
-  )) {
-    $job->app->reset_task_state($db_adup, $TASK_ID);
-    return $job->fail('SyncDeleteUsers fatal error');
-  }
-
-  #
-  # SyncDeleteOUs subtask
-  #
-  unless (defined Adup::Ural::SyncDeleteOUs::do_sync(
-    db => $db_adup,
-    ldap => $ldap,
-    log => $log,
-    job => $job,
-    user => $remote_user,
-  )) {
-    $job->app->reset_task_state($db_adup, $TASK_ID);
-    return $job->fail('SyncDeleteOUs fatal error');
-  }
-
-  #
-  # SyncDisableDismissed subtask
-  #
-  unless (defined Adup::Ural::SyncDisableDismissed::do_sync(
-    db => $db_adup,
-    ldap => $ldap,
-    log => $log,
-    job => $job,
-    user => $remote_user,
-  )) {
-    $job->app->reset_task_state($db_adup, $TASK_ID);
-    return $job->fail('SyncDisableDismissed fatal error');
-  }
+  # done
 
   $job->app->reset_task_state($db_adup, $TASK_ID);
   $ldap->unbind;

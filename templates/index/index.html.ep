@@ -21,7 +21,7 @@
     <div class="col s10 m5">
       <div class="root-link">
         <b><%= link_to 'zupload' => begin %>Загрузка данных из 1С "ЗУП"<% end %></b>
-	% if (config '1cload_schedules') {
+	% if (config 'zupload_schedules') {
         <span class="rasp-root-link">[*&nbsp;запускается по расписанию]</span>
 	% }
       </div>

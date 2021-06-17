@@ -32,7 +32,7 @@ sub _smbload {
   #say "smbclient finished, resultcode is: $?";
 
   if ($r == 0) {
-    $log->l(info=>'Шаблон Persons автоматически скачан с удаленного SMB сервера. Запуск задания постобработки');
+    $log->l(info=>'Шаблон Persons ИС "Галактика" автоматически скачан с удаленного SMB сервера. Запуск задания постобработки');
 
     if ($app->can_start_task(
       sub {

@@ -3,6 +3,7 @@
 _b
 _d_adup
 _r_adup
+_r_cmd
 _r_cron
 _r_minion
 adup.conf_empty
@@ -17,6 +18,7 @@ lib/Adup/Command/preprocess.pm
 lib/Adup/Command/resettasks.pm
 lib/Adup/Command/smbload.pm
 lib/Adup/Command/sync.pm
+lib/Adup/Command/zupload.pm
 lib/Adup/Controller/Comp.pm
 lib/Adup/Controller/Index.pm
 lib/Adup/Controller/Manual.pm
@@ -29,6 +31,7 @@ lib/Adup/Controller/Syncapprove.pm
 lib/Adup/Controller/Syncmerge.pm
 lib/Adup/Controller/Syncmergearchive.pm
 lib/Adup/Controller/Upload.pm
+lib/Adup/Controller/Zupload.pm
 lib/Adup/Plugin/Migrations.pm
 lib/Adup/Plugin/MPagenav.pm
 lib/Adup/Plugin/Utils.pm
@@ -36,6 +39,7 @@ lib/Adup/Task/Merge.pm
 lib/Adup/Task/Preprocess.pm
 lib/Adup/Task/SmbLoad.pm
 lib/Adup/Task/Sync.pm
+lib/Adup/Task/Zupprocess.pm
 lib/Adup/Ural/AttrTranslate.pm
 lib/Adup/Ural/Change.pm
 lib/Adup/Ural/ChangeAttr.pm
@@ -68,6 +72,7 @@ lib/Adup/Ural/SyncDeleteOUs.pm
 lib/Adup/Ural/SyncDeleteUsers.pm
 lib/Adup/Ural/SyncDisableDismissed.pm
 lib/Adup/Ural/UsersCatalog.pm
+lib/Adup/Ural/ZupLoader.pm
 Makefile.PL
 MANIFEST			This list of files
 public/css/material-icons.css
@@ -127,6 +132,7 @@ t/70_loginai.t
 t/71_checkdnbase.t
 t/72_operatorresolver.t
 t/73_mysqldatetimeanalog.t
+t/74_zup_unwind_hierarhy.t
 t/90_dblog.t
 t2/_fio_parser.pl
 t2/_ldap_grp_create.pl
@@ -173,4 +179,5 @@ templates/sync/approve.html.ep
 templates/sync/index.html.ep
 templates/sync/mergearchive.html.ep
 templates/upload/index.html.ep
+templates/zupload/index.html.ep
 test.conf_empty

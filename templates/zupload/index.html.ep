@@ -10,9 +10,9 @@
 % unless (defined $zupprocess_task_id) {
 <p>Ручная загрузка сведений о персонале из конфигурации 1С "Зарплата и управление персоналом 8".<br>
 <b>Параметры загрузки</b><br>
-<b>Огранизация:</b>&nbsp;<%= config '1c_org_name' %><br>
-<b>OData сервер:</b>&nbsp;<%= config '1c_url' %><br>
-% if (config '1cload_schedules') {
+<b>Организация:</b>&nbsp;<%= config 'zup_org_name' %><br>
+<b>OData сервер:</b>&nbsp;<%= config 'zup_url' %><br>
+% if (config 'zupload_schedules') {
 *&nbsp;Внимание:&nbsp;помимо ручной загрузки, выполняется автоматическая загрузка данных по расписанию.
 % }
 </p>
@@ -43,12 +43,12 @@
 % content_with task_update => begin
 <script>
 function cu(){
-  console.log("check!");
+  console.debug("check!");
   $.post('/zupload/cu', function(d){
-    console.log(d.ztid);
+    console.debug(d.ztid);
     if(d.ztid==0){location.reload()}
     if('progress' in d){
-      console.log(d.progress+'%');
+      console.debug(d.progress+'%');
       if($('#progress').hasClass('indeterminate')){
         $('#progress').removeClass('indeterminate').addClass('determinate');
       }

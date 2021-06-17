@@ -1,5 +1,6 @@
 /adup.conf
 /test.conf
+/*.pem
 
 !Build/
 .last_cover_stats

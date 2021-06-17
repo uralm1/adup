@@ -145,7 +145,7 @@ sub validate_config {
     }
   }
   # only one load schedule is allowed
-  if ($c->{smbload_schedules} && $c->{'1cload_schedules'}) {
+  if ($c->{smbload_schedules} && $c->{zupload_schedules}) {
     $e = "Only ONE *load_schedule is allowed! Set unused schdules to undef.";
   }
 

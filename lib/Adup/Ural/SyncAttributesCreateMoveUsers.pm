@@ -20,11 +20,12 @@ use Adup::Ural::DeptsHash;
 #   ldap => $ldap,
 #   log => $log,
 #   job => $job,
-#   user => $remote_user
+#   user => $remote_user,
+#   pos => 2
 # );
 sub do_sync {
   my (%args) = @_;
-  for (qw/db ldap log job user/) { croak 'Required parameters missing' unless defined $args{$_}};
+  for (qw/db ldap log job user pos/) { croak 'Required parameters missing' unless defined $args{$_}};
   say "in SyncAttributesCreateMoveUsers subtask";
 
   # first extract all dept records into one hash cache
@@ -226,7 +227,7 @@ sub do_sync {
     # update progress
     $line_count++;
     if ($line_count % $mod == 0) {
-      my $percent = ceil($line_count / $lines_total * 100);
+      my $percent = ceil(($args{pos} + $line_count / $lines_total) * $args{job}->app->percent_sync_task);
       $args{job}->note(
 	progress => $percent,
 	info => "$percent% Синхронизация пользователей, изменений аттрибутов",

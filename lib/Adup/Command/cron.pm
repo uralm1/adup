@@ -17,21 +17,33 @@ sub run {
   binmode(STDOUT, ':utf8');
   #binmode(STDERR, ':utf8');
 
-  my $sh = $app->config('smbload_schedules');
+  # select right schedule and command
+  my ($sh, $cmd);
+  if ($app->config('smbload_schedules')) {
+    $sh = $app->config('smbload_schedules');
+    $cmd = 'smbload';
+  } elsif ($app->config('zupload_schedules')) {
+    $sh = $app->config('zupload_schedules');
+    $cmd = 'zupload';
+  } else {
+    $log->warn('No schedules are defined. Scheduler process will exit.');
+    return 0;
+  }
+
   if (!$sh || ref($sh) ne 'ARRAY' || !@$sh) {
-    $log->warn('Config parameter smbload_schedules is undefined or empty. Scheduler process will exit.');
+    $log->warn('Config parameter *_schedules is undefined or empty. Scheduler process will exit.');
     return 0;
   }
 
   $log->info("Internal scheduler process started.");
 
-  # use Poll reactor to catch signals, or we have to cal EV::Signal to install signals into EV
+  # use Poll reactor to catch signals, or we have to call EV::Signal to install signals into EV
   Mojo::IOLoop->singleton->reactor(Mojo::Reactor::Poll->new);
 
   local $SIG{INT} = local $SIG{TERM} = sub { Mojo::IOLoop->stop };
 
   Mojo::IOLoop->next_tick(sub {
-    $self->_cron($sh, $_) for (0 .. $#$sh);
+    $self->_cron($sh, $_, $cmd) for (0 .. $#$sh);
   });
 
   Mojo::IOLoop->start unless Mojo::IOLoop->is_running;
@@ -39,7 +51,7 @@ sub run {
 }
 
 sub _cron() {
-  my ($self, $sh, $idx) = @_;
+  my ($self, $sh, $idx, @cmd) = @_;
   my $log = $self->app->log;
   my $crontab = $sh->[$idx];
   carp 'Bad crontab' unless $crontab;
@@ -61,7 +73,7 @@ sub _cron() {
     }
     Mojo::IOLoop->timer(($time - time) => sub {
       $log->info("EVENT from schedule ($idx) started.");
-      my $e = eval { $self->app->commands->run('smbload') };
+      my $e = eval { $self->app->commands->run(@cmd) };
       my $es = (defined $e) ? "code: $e":"with error: $@";
       $log->info("EVENT from schedule ($idx) finished $es.");
       $task->();

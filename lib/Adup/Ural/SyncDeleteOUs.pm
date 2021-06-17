@@ -18,11 +18,12 @@ use Adup::Ural::DeptsHash;
 #   ldap => $ldap,
 #   log => $log,
 #   job => $job,
-#   user => $remote_user
+#   user => $remote_user,
+#   pos => 5
 # );
 sub do_sync {
   my (%args) = @_;
-  for (qw/db ldap log job user/) { croak 'Required parameters missing' unless defined $args{$_}};
+  for (qw/db ldap log job user pos/) { croak 'Required parameters missing' unless defined $args{$_}};
   say "in SyncDeleteOUs subtask";
 
   # load depts table from database into memory hash
@@ -176,7 +177,7 @@ ENTRYLOOP:
     # update progress
     $entry_count++;
     if ($entry_count % $mod == 0) {
-      my $percent = ceil($entry_count / $entries_total * 100);
+      my $percent = ceil(($args{pos} + $entry_count / $entries_total) * $args{job}->app->percent_sync_task);
       $args{job}->note(
 	progress => $percent,
 	info => "$percent% Завершающая синхронизация подразделений",
