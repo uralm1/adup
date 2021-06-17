@@ -1,5 +1,7 @@
+requires 'Mojolicious', '8.50';
 requires 'EV';
-requires 'Mojolicious', '8.09';
+requires 'Cpanel::JSON::XS', '4.10';
+requires 'IO::Socket::SSL', '2.009';
 requires 'Mojo::mysql', '1.04';
 requires 'Minion', '9.03';
 requires 'Minion::Backend::mysql';
