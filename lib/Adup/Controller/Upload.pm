@@ -14,7 +14,7 @@ sub index {
   return unless $self->exists_and_number($log_active_page);
 
   # check dbf processing in progress
-  my $upload_task_id = $self->check_task_in_progress('preprocess_id', 'utid');
+  my $upload_task_id = $self->check_task_in_progress('preprocess', 'utid');
 
   # paginated log
   my $lines_on_page = $self->config('log_lines_on_page');
@@ -113,7 +113,7 @@ sub check {
   return undef unless $self->authorize({admin=>1, gala=>1});
 
   # check dbf processing in progress
-  my $task_id = $self->db_task_id('preprocess_id');
+  my $task_id = $self->task_id('preprocess');
   my $progress = 0;
   my $info = '';
   if ($task_id == 0) {

@@ -9,7 +9,6 @@ use Adup::Ural::Dblog;
 #use Adup::Ural::FlatGroupNamingAI qw(flatgroup_ai);
 use Adup::Ural::ZupLoader;
 
-my $TASK_ID = 'zupprocess_id';
 # $TASK_LOG_STATE_SUCCESS = 0;
 # $TASK_LOG_STATE_ERROR = 1;
 
@@ -36,8 +35,6 @@ sub _load_zup {
 
   my $dblog = Adup::Ural::Dblog->new($db_adup, login=>$remote_user, state=>0);
 
-  $app->set_task_state($db_adup, $TASK_ID, $job->id);
-
   my $loader = eval {
     Adup::Ural::ZupLoader->new($app, $db_adup,
       sub { $job->note(progress => shift, info => shift) }
@@ -45,7 +42,6 @@ sub _load_zup {
   };
   if ($@) {
     $dblog->l(info=>'Ошибка загрузки из 1С "ЗУП" - неверный адрес сервера', state=>1);
-    $app->reset_task_state($db_adup, $TASK_ID);
     return $job->finish('Failed: bad server url');
   }
 
@@ -67,14 +63,11 @@ sub _load_zup {
     elsif (/^database insert to table flatdepts/i) { $msg = 'Произошла ошибка записи подразделений в плоском формате' }
     else { $msg = "Произошла ошибка: $@" }
     $dblog->l(state => 1, info => $msg);
-    $app->reset_task_state($db_adup, $TASK_ID);
     return $job->fail($@);
   }
 
   $loader = undef;
   $dblog->l(info => "Загружены данные 1С \"ЗУП\" по $load_results[0] сотрудникам и выполнен разбор оргструктуры по $load_results[1]/$load_results[2] подразделениям");
-
-  $app->reset_task_state($db_adup, $TASK_ID);
 
   $app->log->info("Finish $$: ".$job->id);
   $job->finish;

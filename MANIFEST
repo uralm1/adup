@@ -15,7 +15,6 @@ lib/Adup.pm
 lib/Adup/Command/cron.pm
 lib/Adup/Command/merge.pm
 lib/Adup/Command/preprocess.pm
-lib/Adup/Command/resettasks.pm
 lib/Adup/Command/smbload.pm
 lib/Adup/Command/sync.pm
 lib/Adup/Command/zupload.pm

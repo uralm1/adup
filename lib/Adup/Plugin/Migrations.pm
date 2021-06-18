@@ -195,3 +195,19 @@ ALTER TABLE `persons` CHANGE `gal_id` `gal_id` VARCHAR(36) NOT NULL;
 -- 5 down
 ALTER TABLE `persons` CHANGE `gal_id` `gal_id` VARCHAR(20) NOT NULL;
 
+-- 6 up
+DROP TABLE IF EXISTS `state`;
+
+-- 6 down
+CREATE TABLE IF NOT EXISTS `state` (
+  `key` varchar(20) NOT NULL,
+  `value` int(11) NOT NULL,
+  PRIMARY KEY (`key`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+INSERT INTO `state` (`key`, `value`) VALUES
+('merge_id', 0),
+('preprocess_id', 0),
+('zupprocess_id', 0),
+('sync_id', 0);
+

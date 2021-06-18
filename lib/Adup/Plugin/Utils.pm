@@ -61,17 +61,17 @@ sub register {
   });
 
 
-  # my $task_id = $self->db_task_id('preprocess_id')
-  $app->helper(db_task_id => sub {
-    my ($self, $k) = @_;
-    my $task_id = 0;
-    eval {
-      my $r = $self->mysql_adup->db->query("SELECT value FROM state WHERE `key` = ?", $k);
-      $task_id = $r->array->[0];
-      $r->finish;
-    };
-    return $task_id;
+  # my $job_id = $self->task_id('preprocess')
+  $app->helper(task_id => sub {
+    my ($self, $task) = @_;
+    my $j = $self->minion->jobs(
+      { tasks => [$task],
+        states => ['inactive', 'active']
+      }
+    );
+    return ($j->total > 0) ? $j->next->{id} : 0;
   });
+
 
   # 1/undef = $self->can_start_task()
   # 1/undef = $self->can_start_task(sub { say $_ })
@@ -89,7 +89,8 @@ sub register {
     my $j = $self->minion->jobs(
       { tasks => ['preprocess', 'zupprocess', 'sync', 'merge'],
         states => ['inactive', 'active']
-      });
+      }
+    );
     if ($j->total > 0) {
       $_ = $j->next->{task};
       $reporting_cb->($_) if $reporting_cb;
@@ -100,47 +101,24 @@ sub register {
   });
 
 
-  # my $task_id = $self->check_task_in_progress('preprocess_id', 'utid')
+  # my $task_id = $self->check_task_in_progress('preprocess', 'utid')
   $app->helper(check_task_in_progress => sub {
-    my ($self, $k, $sesk) = @_;
-    my $task_id = $self->db_task_id($k);
+    my ($self, $task, $sesk) = @_;
+    my $task_id = $self->task_id($task);
     my $s_id = $self->session($sesk);
     if ($task_id == 0) {
       unless (defined $s_id) {
         $task_id = undef; # start
       } else {
-        $task_id = $s_id if $s_id > 0; # wait after task start
         # finished
       }
     } else {
       # task_id > 0, we should always wait
       if (defined $s_id and $s_id == 0) {
-        $self->session($sesk => $task_id); #some erratic behavior
+        $self->session($sesk => $task_id); # some erratic behavior
       }
     }
     return $task_id;
-  });
-
-
-  # $job->app->set_task_state($db, 'preprocess_id', 0)
-  $app->helper(set_task_state => sub {
-    my ($self, $db, $key, $s) = @_;
-
-    my $e = eval {
-      $db->query("UPDATE state SET value = ? WHERE `key` = ?", $s, $key);
-    };
-    unless (defined $e) {
-      # we have to fix croak here
-      carp "Set task state failed";
-      return undef;
-    }
-    1;
-  });
-
-  # $job->app->reset_task_state($db, 'preprocess_id')
-  $app->helper(reset_task_state => sub {
-    my ($self, $db, $key) = @_;
-    $self->set_task_state($db, $key, 0);
   });
 
 

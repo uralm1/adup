@@ -24,7 +24,6 @@ use Adup::Ural::ChangeFlatGroupModify;
 use Adup::Ural::ChangeError;
 use Adup::Ural::Dblog;
 
-my $TASK_ID = 'merge_id';
 # $TASK_LOG_STATE_SUCCESS = 90;
 # $TASK_LOG_STATE_ERROR = 91;
 
@@ -62,8 +61,6 @@ sub _merge {
     $log->l(state=>91, info=>"Произошла ошибка авторизации при подключении к глобальному каталогу");
     return $job->fail("LDAP bind error ".$mesg->error);
   }
-
-  $app->set_task_state($db_adup, $TASK_ID, $job->id);
 
   # merging changes for types ... in sequence
   # see type_robotic field in change objects
@@ -107,7 +104,6 @@ sub _merge {
         ORDER BY $m_order_tmpl id ASC", $mt);
     };
     unless (defined $e) {
-      $app->reset_task_state($db_adup, $TASK_ID);
       return $job->fail('Merge - database fatal error');
     }
     my $changes_count = 0;
@@ -153,7 +149,6 @@ sub _merge {
 
   $log->l(info => 'Отчёт о применении изменений. '.$log_buf) if $log_buf;
 
-  $app->reset_task_state($db_adup, $TASK_ID);
   $ldap->unbind;
 
   $app->log->info("Finish $$: ".$job->id);

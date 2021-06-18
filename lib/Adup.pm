@@ -4,7 +4,6 @@ use Mojo::Base 'Mojolicious';
 use Adup::Command::preprocess;
 use Adup::Command::sync;
 use Adup::Command::merge;
-use Adup::Command::resettasks;
 use Adup::Command::smbload;
 use Adup::Command::zupload;
 use Adup::Command::cron;

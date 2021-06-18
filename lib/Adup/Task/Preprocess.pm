@@ -12,7 +12,6 @@ use Digest::SHA qw(sha1_hex);
 use Adup::Ural::Dblog;
 use Adup::Ural::FlatGroupNamingAI qw(flatgroup_ai);
 
-my $TASK_ID = 'preprocess_id';
 # $TASK_LOG_STATE_SUCCESS = 0;
 # $TASK_LOG_STATE_ERROR = 1;
 
@@ -39,12 +38,9 @@ sub _process_dbf {
 
   my $log = Adup::Ural::Dblog->new($db_adup, login=>$remote_user, state=>0);
 
-  $app->set_task_state($db_adup, $TASK_ID, $job->id);
-
   my $dbf = eval { new XBase($app->config('galdb_temporary_file')) };
   unless (defined $dbf) {
     $log->l(state => 1, info => "Произошла ошибка обработки файла выгрузки");
-    $app->reset_task_state($db_adup, $TASK_ID);
     return $job->fail('XBase object creation failed');
   }
 
@@ -54,7 +50,6 @@ sub _process_dbf {
     $db_adup->query("DELETE FROM flatdepts");
   };
   unless (defined $e) {
-    $app->reset_task_state($db_adup, $TASK_ID);
     return $job->fail('Tables cleanup error');
   }
 
@@ -140,7 +135,6 @@ sub _process_dbf {
       };
       unless (defined $e) {
         $log->l(state => 1, info => "Произошла ошибка записи таблицы persons, $loaded_cnt сотрудников обработано");
-        $app->reset_task_state($db_adup, $TASK_ID);
         return $job->fail('Mysql insert to table persons error');
       }
       $loaded_cnt++;
@@ -168,7 +162,6 @@ sub _process_dbf {
       };
       unless (defined $e) {
         $log->l(state => 1, info => "Произошла ошибка обновления дубликатов в таблице persons, $loaded_cnt сотрудников обработано");
-        $app->reset_task_state($db_adup, $TASK_ID);
         return $job->fail('Mysql update dublicates in table persons error');
       }
     }
@@ -199,7 +192,6 @@ sub _process_dbf {
     };
     unless (defined $e) {
       $log->l(state => 1, info => "Произошла ошибка записи таблицы подразделений");
-      $app->reset_task_state($db_adup, $TASK_ID);
       return $job->fail('Mysql insert to table depts error');
     }
     $dept_loaded_cnt++;
@@ -226,7 +218,6 @@ sub _process_dbf {
     };
     unless (defined $e) {
       $log->l(state => 1, info => "Произошла ошибка записи подразделений в плоском формате");
-      $app->reset_task_state($db_adup, $TASK_ID);
       return $job->fail('Mysql insert to table flatdepts error');
     }
     $flatdept_loaded_cnt++;
@@ -236,8 +227,6 @@ sub _process_dbf {
   #
 
   $log->l(info => "Загружен шаблон ИС \"Галактика\" с информацией по $loaded_cnt сотрудникам и выполнен разбор оргструктуры по $dept_loaded_cnt/$flatdept_loaded_cnt подразделениям");
-
-  $app->reset_task_state($db_adup, $TASK_ID);
 
   $app->log->info("Finish $$: ".$job->id);
   $job->finish;

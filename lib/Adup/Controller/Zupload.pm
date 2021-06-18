@@ -13,7 +13,7 @@ sub index {
   return unless $self->exists_and_number($log_active_page);
 
   # check zup loading in progress
-  my $zupprocess_task_id = $self->check_task_in_progress('zupprocess_id', 'ztid');
+  my $zupprocess_task_id = $self->check_task_in_progress('zupprocess', 'ztid');
 
   # paginated log
   my $lines_on_page = $self->config('log_lines_on_page');
@@ -74,7 +74,7 @@ sub check {
   return undef unless $self->authorize({admin=>1, zup1c=>1});
 
   # check zup loading in progress
-  my $task_id = $self->db_task_id('zupprocess_id');
+  my $task_id = $self->task_id('zupprocess');
   my $progress = 0;
   my $info = '';
   if ($task_id == 0) {

@@ -13,9 +13,9 @@ sub index {
   return unless $self->exists_and_number($log_active_page);
 
   # check sync task is running
-  my $sync_task_id = $self->check_task_in_progress('sync_id', 'stid');
+  my $sync_task_id = $self->check_task_in_progress('sync', 'stid');
   # check merge task is running
-  my $merge_task_id = $self->check_task_in_progress('merge_id', 'mtid');
+  my $merge_task_id = $self->check_task_in_progress('merge', 'mtid');
 
   my $db = $self->mysql_adup->db;
   # get last upload
@@ -97,7 +97,7 @@ sub check {
   return undef unless $self->authorize({admin=>1});
 
   # check sync task progress
-  my $task_id = $self->db_task_id('sync_id');
+  my $task_id = $self->task_id('sync');
   my $progress = 0;
   my $info = '';
   if ($task_id == 0) {

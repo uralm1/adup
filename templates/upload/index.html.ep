@@ -44,7 +44,7 @@
       </div>
     </div>
     <div class="col s5">
-      <div class="info-progress" id="info">Запускается задание постобработки после загрузки</div>
+      <div class="info-progress" id="info">Выполняется задание постобработки после загрузки</div>
     </div>
   </div>
 % content_with task_update => begin

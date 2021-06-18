@@ -17,7 +17,6 @@ use Adup::Ural::SyncDeleteFlatGroups;
 use Adup::Ural::SyncDeleteOUs;
 use Adup::Ural::SyncDisableDismissed;
 
-my $TASK_ID = 'sync_id';
 # $TASK_LOG_STATE_SUCCESS = 10;
 # $TASK_LOG_STATE_ERROR = 11;
 
@@ -72,13 +71,10 @@ sub _sync {
     return $job->fail("LDAP bind error ".$mesg->error);
   }
 
-  $app->set_task_state($db_adup, $TASK_ID, $job->id);
-
   my $e = eval {
     $db_adup->query("DELETE FROM changes");
   };
   unless (defined $e) {
-    $app->reset_task_state($db_adup, $TASK_ID);
     $ldap->unbind;
     return $job->fail('Changes table cleanup error');
   }
@@ -95,7 +91,6 @@ sub _sync {
       pos => $idx
     );
     unless (defined $c) {
-      $app->reset_task_state($db_adup, $TASK_ID);
       $ldap->unbind;
       return $job->fail("$seq_el->{name} fatal error");
     }
@@ -106,7 +101,6 @@ sub _sync {
       $check ||= $SYNC_SEQUENCE[$_]->{_result} > 0 for @{$seq_el->{pre_stop}};
       if ($check) {
         $log->l(info => $seq_el->{pre_stop_msg});
-        $app->reset_task_state($db_adup, $TASK_ID);
         $ldap->unbind;
         $app->log->info("Pre-finish $$: ".$job->id);
         return $job->finish;
@@ -117,7 +111,6 @@ sub _sync {
   }
   # done
 
-  $app->reset_task_state($db_adup, $TASK_ID);
   $ldap->unbind;
 
   $app->log->info("Finish $$: ".$job->id);
