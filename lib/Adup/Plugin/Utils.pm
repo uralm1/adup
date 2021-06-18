@@ -77,31 +77,28 @@ sub register {
   # 1/undef = $self->can_start_task(sub { say $_ })
   $app->helper(can_start_task => sub {
     my ($self, $reporting_cb) = @_;
-    croak 'Bad parameter' if $reporting_cb and ref $reporting_cb ne 'CODE';
-    my $app = $self->app;
+    croak 'Bad reporting callback' if $reporting_cb and ref $reporting_cb ne 'CODE';
 
-    if ($app->check_workers) {
-      # concurrency checks
-      my $task_ids = {
-        preprocess => 'preprocess_id',
-        zupprocess => 'zupprocess_id',
-        sync => 'sync_id',
-        merge => 'merge_id'
-      };
-
-      for (keys %$task_ids) {
-        if ($app->db_task_id($task_ids->{$_}) != 0) {
-          $reporting_cb->($_) if $reporting_cb;
-          return undef;
-        }
-      }
-      return 1;
-    } else {
+    unless ($self->app->check_workers) {
       $_ = '';
       $reporting_cb->($_) if $reporting_cb;
       return undef;
     }
+
+    # concurrency checks
+    my $j = $self->minion->jobs(
+      { tasks => ['preprocess', 'zupprocess', 'sync', 'merge'],
+        states => ['inactive', 'active']
+      });
+    if ($j->total > 0) {
+      $_ = $j->next->{task};
+      $reporting_cb->($_) if $reporting_cb;
+      return undef;
+    }
+
+    return 1;
   });
+
 
   # my $task_id = $self->check_task_in_progress('preprocess_id', 'utid')
   $app->helper(check_task_in_progress => sub {
