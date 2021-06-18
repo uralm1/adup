@@ -8,7 +8,7 @@ use Adup::Command::smbload;
 use Adup::Command::zupload;
 use Adup::Command::cron;
 
-our $VERSION = '1.19';
+our $VERSION = '1.20';
 
 # This method will run once at server start
 sub startup {
@@ -45,7 +45,7 @@ sub startup {
   $self->plugin('Adup::Task::Sync');
   $self->plugin('Adup::Task::Merge');
   $self->plugin('Adup::Task::SmbLoad');
-  push @{$self->commands->namespaces}, 'Adup::Command';
+  $self->commands->namespaces(['Mojolicious::Command', 'Minion::Command', 'Adup::Command']);
 
   $self->defaults(version => $VERSION);
 

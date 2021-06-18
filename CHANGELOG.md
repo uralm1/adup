@@ -2,6 +2,7 @@
 All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
+- Из неймспейса команд исключены Author команды.
 
 ## [1.19] - 2021-06-18
 - Взаимоблокировка заданий через named guard locks.
