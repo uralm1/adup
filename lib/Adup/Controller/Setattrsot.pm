@@ -15,10 +15,10 @@ sub sot {
   my $self = shift;
   return undef unless $self->authorize({admin=>1, sot=>1});
 
-  my $search = $self->param('s');
+  my $search = $self->param('s') // '';
   my $res_tab;
 
-  if ($search) {
+  if ($search ne '') {
     # perform search
     my $ldap = Net::LDAP->new($self->config->{ldap_servers}, port => 389, timeout => 10, version => 3);
     unless ($ldap) {
@@ -64,9 +64,6 @@ sub sot {
     }
 
     $ldap->unbind;
-
-  } else {
-    $search = '';
   }
 
   $self->render(template => 'setattr/sot',

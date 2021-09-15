@@ -12,10 +12,10 @@ sub manual {
   my $self = shift;
   return undef unless $self->authorize($self->allow_all_roles);
 
-  my $search = $self->param('s');
+  my $search = $self->param('s') // '';
   my $res_tab;
 
-  if ($search) {
+  if ($search ne '') {
     # perform search
     my $ldap = Net::LDAP->new($self->config->{ldap_servers}, port => 389, timeout => 10, version => 3);
     unless ($ldap) {
@@ -61,9 +61,6 @@ sub manual {
     }
 
     $ldap->unbind;
-
-  } else {
-    $search = '';
   }
 
   $self->render(
