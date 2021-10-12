@@ -4,6 +4,7 @@ use Mojo::Base 'Mojolicious::Plugin';
 use Carp;
 use Mojo::mysql;
 use Mojo::Util qw(xml_escape);
+use Mojo::ByteStream 'b';
 
 use Adup::Ural::Changelog;
 use Adup::Ural::UsersCatalog;
@@ -131,10 +132,10 @@ sub register {
       if ($coo ne $cur_version) {
         $c->cookie(versionA => $cur_version, {path => '/', expires=>time+360000000});
         if (my $changelog = Adup::Ural::Changelog->new($cur_version)) {
-	  return '<div id="newversion-modal" class="modal modal-fixed-footer">
+	  return b('<div id="newversion-modal" class="modal modal-fixed-footer">
 <div class="modal-content"><h4>Новая версия '.$changelog->get_version.
 '</h4><p><b>Последние улучшения и новинки:</b></p><pre class="newversion-hist">'.$changelog->get_changelog.
-'</pre></div><div class="modal-footer"><a href="#!" class="modal-close waves-effect waves-green btn-flat">Отлично</a></div></div>';
+'</pre></div><div class="modal-footer"><a href="#!" class="modal-close waves-effect waves-green btn-flat">Отлично</a></div></div>');
 	}
       }
     } else {

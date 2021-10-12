@@ -2,6 +2,7 @@
 All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
+- Исправлен поиск "0".
 - Из неймспейса команд исключены Author команды.
 
 ## [1.19] - 2021-06-18
