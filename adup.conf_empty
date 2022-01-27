@@ -52,9 +52,9 @@
 
   # only one schedule should be defined!
   # set to undef to disable scheduling
-  smbload_schedules => [ '3 21 * * *' ],
+  smbload_schedules => undef,
 
-  zupload_schedules => undef,
+  zupload_schedules => [ '3 21 * * *' ],
   #####
 
   help_url => 'https://faq.contoso.com/doku.php?id=adup',
