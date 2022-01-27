@@ -180,7 +180,8 @@ ENTRYLOOP:
       my $percent = ceil(($args{pos} + $entry_count / $entries_total) * $args{job}->app->percent_sync_task);
       $args{job}->note(
 	progress => $percent,
-	info => "$percent% Завершающая синхронизация подразделений",
+        # mysql minion backend bug workaround
+	info => encode_utf8("$percent% Завершающая синхронизация подразделений"),
       );
     }
 

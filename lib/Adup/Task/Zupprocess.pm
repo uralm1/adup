@@ -3,6 +3,7 @@ use Mojo::Base 'Mojolicious::Plugin';
 
 use Carp;
 use POSIX qw(ceil);
+use Encode qw(encode_utf8);
 #use Data::Dumper;
 
 use Adup::Ural::Dblog;
@@ -37,7 +38,8 @@ sub _load_zup {
 
   my $loader = eval {
     Adup::Ural::ZupLoader->new($app, $db_adup,
-      sub { $job->note(progress => shift, info => shift) }
+      # mysql minion backend bug workaround
+      sub { $job->note(progress => shift, info => encode_utf8(shift)) }
     )
   };
   if ($@) {

@@ -144,7 +144,8 @@ sub _process_dbf {
       my $percent = ceil($_ / $last_record * 100);
       $job->note(
         progress => $percent,
-        info => "$percent% Обработка перечня сотрудников",
+        # mysql minion backend bug workaround
+        info => encode_utf8("$percent% Обработка перечня сотрудников"),
       );
     }
   }
@@ -172,7 +173,8 @@ sub _process_dbf {
 
   $job->note(
     progress => 100,
-    info => 'Выполняется разбор оргструктуры подразделений',
+    # mysql minion backend bug workaround
+    info => encode_utf8('Выполняется разбор оргструктуры подразделений'),
   );
 
   #

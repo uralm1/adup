@@ -30,7 +30,8 @@ sub do_sync {
   my $percent = ceil($args{pos} * $args{job}->app->percent_sync_task);
   $args{job}->note(
     progress => $percent,
-    info => "$percent% $pmsg",
+    # mysql minion backend bug workaround
+    info => encode_utf8("$percent% $pmsg"),
   );
 
   #
@@ -98,7 +99,8 @@ sub do_sync {
   $percent = int(($args{pos} + 1) * $args{job}->app->percent_sync_task);
   $args{job}->note(
     progress => $percent,
-    info => "$percent% $pmsg",
+    # mysql minion backend bug workaround
+    info => encode_utf8("$percent% $pmsg"),
   );
 
   $args{log}->l(info => "Проверка блокирования архивных учётных записей. Создано $delete_changes_count изменений блокирования архивных учётных записей.");
