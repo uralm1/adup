@@ -5,7 +5,7 @@ use Carp;
 use Mojo::UserAgent;
 use Mojo::URL;
 use Mojo::mysql;
-use POSIX qw(ceil);
+use POSIX qw(ceil strftime);
 use Encode qw(encode_utf8);
 use Digest::SHA qw(sha1_hex);
 #use Data::Dumper;
@@ -131,12 +131,17 @@ sub read_kis {
   my $self = shift;
   croak 'Org key is not loaded!' unless $self->{org_key};
 
+  my $now = strftime '%Y-%m-%dT%H:%M:%S', localtime;
+
   # Перечисление.ВидыКадровыхСобытий
   my $dismiss_ev = 'Увольнение';
 
-  my $obj = 'InformationRegister_КадроваяИсторияСотрудников_RecordType/SliceLast()';
-  my $select = 'Period,Сотрудник_Key,ФизическоеЛицо_Key,Подразделение_Key,Должность_Key,ДолжностьПоШтатномуРасписанию_Key,ВидСобытия,ВидДоговора';
-  my $filter = "ГоловнаяОрганизация_Key eq guid'$self->{org_key}' and Организация_Key eq guid'$self->{org_key}' and Active eq true and ВидСобытия ne '$dismiss_ev'";
+  #my $obj = 'InformationRegister_КадроваяИсторияСотрудников_RecordType/SliceLast()';
+  #my $select = 'Period,Сотрудник_Key,ФизическоеЛицо_Key,Подразделение_Key,Должность_Key,ДолжностьПоШтатномуРасписанию_Key,ВидСобытия,ДействуетДо';
+  #my $filter = "ГоловнаяОрганизация_Key eq guid'$self->{org_key}' and Организация_Key eq guid'$self->{org_key}' and Active eq true and ВидСобытия ne '$dismiss_ev'";
+  my $obj = "InformationRegister_КадроваяИсторияСотрудниковИнтервальный";
+  my $select = 'ДатаОкончания,ДатаНачала,Сотрудник_Key,ФизическоеЛицо_Key,Подразделение_Key,Должность_Key,ДолжностьПоШтатномуРасписанию_Key,ВидСобытия,ДействуетДо';
+  my $filter = "ГоловнаяОрганизация_Key eq guid'$self->{org_key}' and Организация_Key eq guid'$self->{org_key}' and ДатаОкончания gt datetime'$now' and ДатаНачала le datetime'$now' and ВидСобытия ne '$dismiss_ev'";
   my $top = undef;
 
   my $url_kis = Mojo::URL->new($obj)->to_abs($self->{url_base})->query({'$select'=>$select, '$filter'=>$filter, '$top'=>$top});
@@ -174,9 +179,9 @@ sub process_data {
 
   $self->progress(10, '10% Очистка таблиц');
   my $e = eval {
-    $self->get_db->query("DELETE FROM persons");
-    $self->get_db->query("DELETE FROM depts");
-    $self->get_db->query("DELETE FROM flatdepts");
+    $self->get_db->query("TRUNCATE persons");
+    $self->get_db->query("TRUNCATE depts");
+    $self->get_db->query("TRUNCATE flatdepts");
   };
   die "Database tables cleanup error\n" unless defined $e;
 
