@@ -5,7 +5,7 @@ use Carp;
 use POSIX qw(ceil);
 use Mojo::mysql;
 use Net::LDAP qw(LDAP_SUCCESS LDAP_INSUFFICIENT_ACCESS LDAP_NO_SUCH_OBJECT);
-use Net::LDAP::Util qw(canonical_dn escape_filter_value escape_dn_value);
+use Net::LDAP::Util qw(ldap_explode_dn escape_filter_value escape_dn_value);
 use Encode qw(encode_utf8 decode_utf8);
 #use Data::Dumper;
 use Adup::Ural::ChangeUserCreate;
@@ -37,12 +37,12 @@ sub do_sync {
   my $res;
   my $e = eval {
     $res = $args{db}->query("SELECT fio, dup, f, i, o, dolj, otdel, tabn, dept_id, \
-      depts.name AS dept, \
-      flatdepts.cn AS flatdept_cn, flatdepts.name AS flatdept_name  \
-      FROM persons \
-      LEFT OUTER JOIN depts ON dept_id = depts.id \
-      LEFT OUTER JOIN flatdepts ON flatdept_id = flatdepts.id \
-      ORDER BY persons.id ASC");
+depts.name AS dept, \
+flatdepts.cn AS flatdept_cn, flatdepts.name AS flatdept_name  \
+FROM persons \
+LEFT OUTER JOIN depts ON dept_id = depts.id \
+LEFT OUTER JOIN flatdepts ON flatdept_id = flatdepts.id \
+ORDER BY persons.id ASC");
   };
   unless (defined $e) {
     carp 'SyncAttributesCreateMoveUsers - database fatal error';
@@ -118,7 +118,7 @@ sub do_sync {
 	my $entry = $r->entry(0);
 	#say Dumper $entry;
 	my $dn = decode_utf8($entry->dn);
-	my $canon_dn = canonical_dn($dn);
+	my $canon_dn = canonical_dn_fixed($dn);
 	#say 'dn: '.$dn;
 
 	# hash of existing attributes (from AD)
@@ -162,8 +162,8 @@ sub do_sync {
 	    GROUPMEMBER:
 	    foreach my $m (@v) {
               utf8::decode($m);
-	      #say "Member: ".canonical_dn($m);
-              if (canonical_dn($m) eq $canon_dn) {
+	      #say "Member: ".canonical_dn_fixed($m);
+              if (canonical_dn_fixed($m) eq $canon_dn) {
                 $groupmember = 1;
 		last GROUPMEMBER;
 	      }
@@ -184,7 +184,7 @@ sub do_sync {
         }
 
 	# moving user (only for unique persons)
-	if ($dup == 0 and $canon_dn ne canonical_dn($dn_built)) {
+	if ($dup == 0 and $canon_dn ne canonical_dn_fixed($dn_built)) {
 	  # user has to be moved to $dn_built
 	  #say $dn."\n".$dn_built."\n";
 	  my $c = Adup::Ural::ChangeUserMove->new($next->{fio}, $dn, $args{user});
@@ -256,6 +256,53 @@ sub _abbr {
     push @abbr, substr($w, 0, 1);
   }
   return uc join('', @abbr);
+}
+
+
+# internal, from Net::LDAP::Util
+# options not supported
+sub canonical_dn_fixed {
+  my ($dn, %opt) = @_;
+
+  return $dn unless defined $dn and $dn ne '';
+
+  # create array of hash representation
+  # we only support dn as string
+  my $rdns = ldap_explode_dn($dn, casefold => 'upper')
+    or return undef; # error condition
+
+  # default separator value
+  my $separator = ',';
+
+  # flatten all RDNs into strings
+  my @flatrdns =
+    map {
+      my $rdn = $_;
+      my @types = sort keys %$rdn;
+      join('+',
+        map {
+          my $val = $rdn->{$_};
+
+          if (ref($val)) {
+            $val = '#' . unpack('H*', $$val);
+          } else {
+            # escape insecure characters
+            # we don't escape MBC
+            $val =~ s/([\x00-\x1f\/\\",=+<>#;])/
+              sprintf('\\%02x', ord($1))/xeg;
+            # escape leading and trailing whitespace
+            $val =~ s/(^\s+|\s+$)/
+              '\\20' x length $1/xeg;
+            # dont't compact spaces in values!
+          }
+
+          # case fold attribute type and create return value
+          (uc $_)."=$val";
+        } @types);
+    } @$rdns;
+
+  # join RDNs into string
+  join($separator, @flatrdns);
 }
 
 
