@@ -4,7 +4,8 @@ use Mojo::Base 'Adup::Ural::Change';
 use Mojo::Util qw(xml_escape);
 use Carp;
 use Net::LDAP qw(LDAP_SUCCESS LDAP_INSUFFICIENT_ACCESS LDAP_ALREADY_EXISTS);
-use Net::LDAP::Util qw(ldap_explode_dn canonical_dn unescape_dn_value);
+use Net::LDAP::Util qw(ldap_explode_dn canonical_dn);
+use Adup::Ural::LdapListsUtil qw(unescape_dn_value_full);
 use Adup::Ural::Dblog;
 use Encode qw(decode_utf8);
 
@@ -34,7 +35,7 @@ sub type_robotic {
 sub info_human {
   my $self = shift;
 
-  my $r = '<b>DN:</b> '.xml_escape(unescape_dn_value($self->{dn})).'<br>';
+  my $r = '<b>DN:</b> '.xml_escape(unescape_dn_value_full($self->{dn})).'<br>';
   $r .= '<b>Удаление</b> учётной записи пользователя <b>из группы почтового справочника.</b><br>';
   $r .= '<span class="info-attr">ФИО:</span> '.xml_escape($self->member_cn).'<br>';
   $r .= '<span class="info-attr">Группа почтового справочника:</span> &laquo;'.xml_escape($self->flatgroup_name).'&raquo;.';

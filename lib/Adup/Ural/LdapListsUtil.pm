@@ -2,12 +2,12 @@ package Adup::Ural::LdapListsUtil;
 use Mojo::Base -base;
 
 use Net::LDAP::Entry;
-use Net::LDAP::Util qw(ldap_explode_dn);
+use Net::LDAP::Util qw(ldap_explode_dn unescape_dn_value);
 use Encode qw(decode);
 use Carp;
 
 use Exporter qw(import);
-our @EXPORT_OK = qw(ldapattrs2list ldaplist2attrs_entry checkdnbase);
+our @EXPORT_OK = qw(ldapattrs2list ldaplist2attrs_entry checkdnbase canonical_dn_fixed unescape_dn_value_full);
 
 # returns list of all values from 2 ldap attributes
 # @list = Adup::Ural::LdapListsUtil::ldapattrs2list($entry, 'telephoneNumber', 'otherTelephone')
@@ -64,6 +64,61 @@ sub checkdnbase {
     }
   }
   return 1;
+}
+
+
+# analog of canonical_dn() from Net::LDAP::Util
+# options not supported
+sub canonical_dn_fixed {
+  my ($dn, %opt) = @_;
+
+  return $dn unless defined $dn and $dn ne '';
+
+  # create array of hash representation
+  # we only support dn as string
+  my $rdns = ldap_explode_dn($dn, casefold => 'upper')
+    or return undef; # error condition
+
+  # default separator value
+  my $separator = ',';
+
+  # flatten all RDNs into strings
+  my @flatrdns =
+    map {
+      my $rdn = $_;
+      my @types = sort keys %$rdn;
+      join('+',
+        map {
+          my $val = $rdn->{$_};
+
+          if (ref($val)) {
+            $val = '#' . unpack('H*', $$val);
+          } else {
+            # escape insecure characters
+            # we don't escape MBC
+            $val =~ s/([\x00-\x1f\/\\",=+<>#;])/
+              sprintf('\\%02x', ord($1))/xeg;
+            # escape leading and trailing whitespace
+            $val =~ s/(^\s+|\s+$)/
+              '\\20' x length $1/xeg;
+            # dont't compact spaces in values!
+          }
+
+          # case fold attribute type and create return value
+          (uc $_)."=$val";
+        } @types);
+    } @$rdns;
+
+  # join RDNs into string
+  join($separator, @flatrdns);
+}
+
+
+# unescape_dn_value(), then "OU=\ Dept" -> "OU= Dept"
+sub unescape_dn_value_full {
+  my $dn = unescape_dn_value(shift);
+  $dn =~ s/=\\ /= /g;
+  return $dn;
 }
 
 

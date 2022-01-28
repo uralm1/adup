@@ -4,7 +4,8 @@ use Mojo::Base 'Adup::Ural::Change';
 use Mojo::Util qw(xml_escape);
 use Carp;
 use Net::LDAP qw(LDAP_SUCCESS LDAP_INSUFFICIENT_ACCESS);
-use Net::LDAP::Util qw(ldap_explode_dn unescape_dn_value);
+use Net::LDAP::Util qw(ldap_explode_dn);
+use Adup::Ural::LdapListsUtil qw(unescape_dn_value_full);
 use Adup::Ural::Dblog;
 
 
@@ -32,7 +33,7 @@ sub type_robotic {
 sub info_human {
   my $self = shift;
 
-  my $r = '<b>DN:</b> '.xml_escape(unescape_dn_value($self->{dn})).'<br>';
+  my $r = '<b>DN:</b> '.xml_escape(unescape_dn_value_full($self->{dn})).'<br>';
   $r .= '<b>Создание</b> группы почтового справочника корпоративной почты.';
   $r .= '<br><span class="info-attr">Подразделение:</span> устанавливается &laquo;'.xml_escape($self->{dept_name}).'&raquo;<br>';
 

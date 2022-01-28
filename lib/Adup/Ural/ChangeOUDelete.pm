@@ -4,8 +4,8 @@ use Mojo::Base 'Adup::Ural::Change';
 use Mojo::Util qw(xml_escape);
 use Carp;
 use Net::LDAP qw(LDAP_SUCCESS LDAP_INSUFFICIENT_ACCESS LDAP_NO_SUCH_OBJECT LDAP_NOT_ALLOWED_ON_NONLEAF);
-use Net::LDAP::Util qw(ldap_explode_dn unescape_dn_value);
-use Adup::Ural::LdapListsUtil qw(checkdnbase);
+use Net::LDAP::Util qw(ldap_explode_dn);
+use Adup::Ural::LdapListsUtil qw(checkdnbase unescape_dn_value_full);
 use Adup::Ural::Dblog;
 
 
@@ -33,7 +33,7 @@ sub type_robotic {
 sub info_human {
   my $self = shift;
 
-  my $r = '<b>DN:</b> '.xml_escape(unescape_dn_value($self->{dn})).'<br>';
+  my $r = '<b>DN:</b> '.xml_escape(unescape_dn_value_full($self->{dn})).'<br>';
   $r .= '<b>Удаление неактуального подразделения';
   $r .= (defined $self->{level}) ? ' '.xml_escape($self->{level}).'-го уровня иерархии.' : '.';
   $r .= '</b>';

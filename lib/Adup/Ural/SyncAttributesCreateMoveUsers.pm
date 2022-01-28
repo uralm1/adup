@@ -5,7 +5,7 @@ use Carp;
 use POSIX qw(ceil);
 use Mojo::mysql;
 use Net::LDAP qw(LDAP_SUCCESS LDAP_INSUFFICIENT_ACCESS LDAP_NO_SUCH_OBJECT);
-use Net::LDAP::Util qw(ldap_explode_dn escape_filter_value escape_dn_value);
+use Net::LDAP::Util qw(escape_filter_value escape_dn_value);
 use Encode qw(encode_utf8 decode_utf8);
 #use Data::Dumper;
 use Adup::Ural::ChangeUserCreate;
@@ -14,6 +14,7 @@ use Adup::Ural::ChangeAttr;
 use Adup::Ural::ChangeError;
 use Adup::Ural::Dblog;
 use Adup::Ural::DeptsHash;
+use Adup::Ural::LdapListsUtil qw(canonical_dn_fixed);
 
 # 1/undef = Adup::Ural::SyncAttributesCreateMoveUsers::do_sync(
 #   db => $db_adup,
@@ -256,53 +257,6 @@ sub _abbr {
     push @abbr, substr($w, 0, 1);
   }
   return uc join('', @abbr);
-}
-
-
-# internal, from Net::LDAP::Util
-# options not supported
-sub canonical_dn_fixed {
-  my ($dn, %opt) = @_;
-
-  return $dn unless defined $dn and $dn ne '';
-
-  # create array of hash representation
-  # we only support dn as string
-  my $rdns = ldap_explode_dn($dn, casefold => 'upper')
-    or return undef; # error condition
-
-  # default separator value
-  my $separator = ',';
-
-  # flatten all RDNs into strings
-  my @flatrdns =
-    map {
-      my $rdn = $_;
-      my @types = sort keys %$rdn;
-      join('+',
-        map {
-          my $val = $rdn->{$_};
-
-          if (ref($val)) {
-            $val = '#' . unpack('H*', $$val);
-          } else {
-            # escape insecure characters
-            # we don't escape MBC
-            $val =~ s/([\x00-\x1f\/\\",=+<>#;])/
-              sprintf('\\%02x', ord($1))/xeg;
-            # escape leading and trailing whitespace
-            $val =~ s/(^\s+|\s+$)/
-              '\\20' x length $1/xeg;
-            # dont't compact spaces in values!
-          }
-
-          # case fold attribute type and create return value
-          (uc $_)."=$val";
-        } @types);
-    } @$rdns;
-
-  # join RDNs into string
-  join($separator, @flatrdns);
 }
 
 

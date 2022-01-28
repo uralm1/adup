@@ -4,7 +4,8 @@ use Mojo::Base 'Adup::Ural::Change';
 use Mojo::Util qw(xml_escape);
 use Carp;
 use Net::LDAP qw(LDAP_SUCCESS LDAP_INSUFFICIENT_ACCESS);
-use Net::LDAP::Util qw(ldap_explode_dn unescape_dn_value);
+use Net::LDAP::Util qw(ldap_explode_dn);
+use Adup::Ural::LdapListsUtil qw(unescape_dn_value_full);
 use Adup::Ural::Dblog;
 
 
@@ -34,7 +35,7 @@ sub type_robotic {
 sub info_human {
   my $self = shift;
 
-  my $r = '<b>DN:</b> '.xml_escape(unescape_dn_value($self->{dn})).'<br>';
+  my $r = '<b>DN:</b> '.xml_escape(unescape_dn_value_full($self->{dn})).'<br>';
   $r .= '<b>Изменение</b> подразделения '.xml_escape($self->{level}).'-го уровня иерархии.';
   $r .= '<br><span class="info-attr">Подразделение:</span> &laquo;'.xml_escape($self->{old_dept_name}).'&raquo; заменяется на &laquo;'.xml_escape($self->{dept_name}).'&raquo;<br>';
   #$r .= '<div class="info-warn"><b>Зависимости!</b> Примените все изменения подразделений более верхнего уровня иерархии перед утверждением данного изменения.</div>' if $self->{level} > 0;

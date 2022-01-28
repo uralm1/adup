@@ -4,7 +4,8 @@ use Mojo::Base 'Adup::Ural::Change';
 use Mojo::Util qw(xml_escape);
 use Carp;
 use Net::LDAP qw(LDAP_SUCCESS LDAP_INSUFFICIENT_ACCESS LDAP_ALREADY_EXISTS);
-use Net::LDAP::Util qw(ldap_explode_dn unescape_dn_value escape_dn_value);
+use Net::LDAP::Util qw(ldap_explode_dn escape_dn_value);
+use Adup::Ural::LdapListsUtil qw(unescape_dn_value_full);
 use Adup::Ural::Dblog;
 
 #use Data::Dumper;
@@ -36,7 +37,7 @@ sub type_robotic {
 sub info_human {
   my $self = shift;
 
-  my $r = '<b>DN:</b> '.xml_escape(unescape_dn_value($self->{dn})).'<br>';
+  my $r = '<b>DN:</b> '.xml_escape(unescape_dn_value_full($self->{dn})).'<br>';
   if ($self->{disabled}) {
     $r .= '<b>Перенос ранее отключенной учётной записи пользователя в &laquo;УВОЛЕННЫЕ&raquo;</b><br>';
   } else {

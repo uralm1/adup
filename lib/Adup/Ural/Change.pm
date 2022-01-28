@@ -6,7 +6,7 @@ use Adup::Ural::MySQLDateTimeAnalog;
 use Scalar::Util qw(blessed);
 use Mojo::JSON qw(to_json);
 use Mojo::Util qw(xml_escape);
-use Net::LDAP::Util qw(unescape_dn_value);
+use Adup::Ural::LdapListsUtil qw(unescape_dn_value_full);
 
 
 # Adup::Ural::Change->new($name, $dn, 'author');
@@ -65,7 +65,7 @@ sub author {
 
 sub info_human {
   my $self = shift;
-  my $r = '<b>DN:</b> '.xml_escape(unescape_dn_value($self->{dn})).'<br>';
+  my $r = '<b>DN:</b> '.xml_escape(unescape_dn_value_full($self->{dn})).'<br>';
   $r .= '<span class="info-error">Изменение этого типа не предназначено к использованию</span>';
   return $r;
 }
