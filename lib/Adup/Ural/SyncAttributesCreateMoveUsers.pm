@@ -58,6 +58,7 @@ sub do_sync {
   my $ldapbase = $args{job}->app->config->{ldap_base};
   my $pers_ldapbase = $args{job}->app->config->{personnel_ldap_base};
   my $fg_ldapbase = $args{job}->app->config->{flatgroups_ldap_base};
+  my $organization_attr = $args{job}->app->config->{organization_attr};
   my @attributes = qw/givenName sn middleName displayName initials title company department description employeeID/;
 
   while (my $next = $res->hash) {
@@ -76,7 +77,7 @@ sub do_sync {
     $refhash->{displayName} = substr($next->{fio}, 0, 256);
     $refhash->{initials} = _abbr($next->{fio});
     $refhash->{title} = substr($next->{dolj}, 0, 128) if $next->{dolj};
-    $refhash->{company} = 'МУП "Уфаводоканал"';
+    $refhash->{company} = $organization_attr;
     $refhash->{department} = substr($next->{dept}, 0, 64) if $next->{dept};
     $refhash->{description} = substr($next->{otdel}, 0, 1024) if $next->{otdel};
     $refhash->{employeeID} = substr($next->{tabn}, 0, 16) if $next->{tabn};

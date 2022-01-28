@@ -35,6 +35,8 @@
   log_lines_on_page => 12,
   changes_on_page => 10,
 
+  organization_attr => 'MY FIRM',
+
   smb_share => '//smbserver/dbf',
   smb_file => 'persons.dbf',
   smb_user => 'user',

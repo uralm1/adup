@@ -8,7 +8,7 @@ use Adup::Command::smbload;
 use Adup::Command::zupload;
 use Adup::Command::cron;
 
-our $VERSION = '1.20';
+our $VERSION = '1.21';
 
 # This method will run once at server start
 sub startup {
@@ -135,7 +135,7 @@ sub validate_config {
   my $c = $self->config;
 
   my $e = undef;
-  for (qw/personnel_ldap_base flatgroups_ldap_base dismissed_ou_dn/) {
+  for (qw/personnel_ldap_base flatgroups_ldap_base dismissed_ou_dn organization_attr/) {
     unless ($c->{$_}) {
       $e = "Config parameter $_ is not defined!";
       last;
