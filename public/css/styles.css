@@ -40,6 +40,10 @@ html {
   vertical-align:middle !important;
 }
 
+.change-infoblock {
+  white-space:pre-wrap;
+}
+
 .approve-userblock {
   font-size:12px;
   line-height:16px;

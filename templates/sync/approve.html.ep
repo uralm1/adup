@@ -68,7 +68,9 @@
 	<td><%= $c->type_human %></td>
 	<td><%= $c->name %></td>
 	<td>
-	  <%== $c->info_human %>
+	  <div class="change-infoblock">
+	  %== $c->info_human
+	  </div>
 	  % my $cinfo = $c->author;
 	  % my $created_info = 'Изменение создано: '.xml_escape(oprs $cinfo->{author}).' '.xml_escape($cinfo->{date});
 	  <div class="approve-userblock"><%== $created_info %></div>

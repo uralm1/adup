@@ -9,7 +9,7 @@
   <!--link rel="stylesheet" href="/css/fonts-roboto.css"-->
   <link rel="stylesheet" href="/css/materialize.min.css?v=101">
   <link rel="stylesheet" href="/css/material-icons.css">
-  <link rel="stylesheet" href="/css/styles.css?v=132">
+  <link rel="stylesheet" href="/css/styles.css?v=133">
 </head>
 <body>
 % my $newversion = check_newversion;

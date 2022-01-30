@@ -60,8 +60,8 @@ sub index {
   my $r;
   $e = eval {
     $r = $db->query("SELECT id, name, c \
-      FROM changes $apnd \
-      ORDER BY id LIMIT ? OFFSET ?",
+FROM changes $apnd \
+ORDER BY id LIMIT ? OFFSET ?",
       $changes_on_page, ($active_page - 1)*$changes_on_page
     );
   };
