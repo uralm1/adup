@@ -52,9 +52,7 @@
 	<td><%== (($c->merged) ? '<div class="approve-userblock">Применено:</div>':'').$c->type_human %></td>
 	<td><%= $c->name %></td>
 	<td>
-	  <div class="change-infoblock">
-	  %== $c->info_human
-	  </div>
+	  <div class="change-infoblock"><%== $c->info_human %></div>
 	  % my $created_info = 'Изменение создано: '.xml_escape(oprs $c->author->{author}).' '.xml_escape($c->author->{date});
 	  <div class="approve-userblock"><%== $created_info %></div>
 	  % my $approved_info = 'Не утверждено';

@@ -38,14 +38,13 @@ sub type_robotic {
 sub info_human {
   my $self = shift;
 
-  my $r = '<b>DN:</b> '.xml_escape(unescape_dn_value_full($self->{dn})).'<br>';
-  $r .= '<b>Создание отключенной учётной записи пользователя</b><br>';
+  my $r = '<b>DN:</b> '.xml_escape(unescape_dn_value_full($self->{dn}));
+  $r .= '<br><b>Создание отключенной учётной записи пользователя</b>';
   for (sort keys %{$self->{attrs}}) {
-    $r .= '<span class="info-attr">'.translate($_).':</span> ';
+    $r .= '<br><span class="info-attr">'.translate($_).':</span> ';
     $r .= '&laquo;'.xml_escape($self->attr($_)).'&raquo;;';
-    $r .= '<br>';
   }
-  $r .= '<b>Пользователь будет добавлен в группу почтового справочника:</b> &laquo;'.xml_escape($self->{flatgroup}{name}).'&raquo;.' if $self->{flatgroup};
+  $r .= '<br><b>Пользователь будет добавлен в группу почтового справочника:</b> &laquo;'.xml_escape($self->{flatgroup}{name}).'&raquo;.' if $self->{flatgroup};
   $r .= '<div class="info-warn"><b>Логин</b> пользователя будет автоматически сгенерирован при применении данного изменения.</div>';
   $r .= '<div class="info-warn"><b>Зависимости!</b> Примените все изменения подразделений перед утверждением изменения.</div>';
 

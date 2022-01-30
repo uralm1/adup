@@ -29,8 +29,8 @@ sub type_robotic {
 
 sub info_human {
   my $self = shift;
-  my $r = '<b>DN:</b> '.xml_escape(unescape_dn_value_full($self->{dn})).'<br>';
-  $r .= '<span class="info-error">'.xml_escape($self->{error}).'</span>';
+  my $r = '<b>DN:</b> '.xml_escape(unescape_dn_value_full($self->{dn}));
+  $r .= '<br><span class="info-error">'.xml_escape($self->{error}).'</span>';
   return $r;
 }
 

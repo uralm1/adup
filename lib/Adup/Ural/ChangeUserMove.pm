@@ -36,10 +36,10 @@ sub type_robotic {
 sub info_human {
   my $self = shift;
 
-  my $r = '<b>DN:</b> '.xml_escape(unescape_dn_value_full($self->{dn})).'<br>';
-  $r .= '<b>Перемещение учётной записи пользователя</b><br>';
-  $r .= '<span class="info-attr">ФИО:</span> '.xml_escape($self->{cn}).'<br>';
-  $r .= '<b>Новый DN:</b> '.xml_escape(unescape_dn_value_full($self->{sup}));
+  my $r = '<b>DN:</b> '.xml_escape(unescape_dn_value_full($self->{dn}));
+  $r .= '<br><b>Перемещение учётной записи пользователя</b>';
+  $r .= '<br><span class="info-attr">ФИО:</span> '.xml_escape($self->{cn});
+  $r .= '<br><b>Новый DN:</b> '.xml_escape(unescape_dn_value_full($self->{sup}));
   $r .= '<div class="info-warn"><b>Зависимости!</b> Примените все изменения подразделений перед утверждением изменения.</div>';
   $r .= '<div class="info-warn"><b>Зависимости!</b> Примените все изменения аттрибутов перед утверждением изменения.</div>';
 

@@ -35,10 +35,10 @@ sub type_robotic {
 sub info_human {
   my $self = shift;
 
-  my $r = '<b>DN:</b> '.xml_escape(unescape_dn_value_full($self->{dn})).'<br>';
-  $r .= '<b>Удаление</b> учётной записи пользователя <b>из группы почтового справочника.</b><br>';
-  $r .= '<span class="info-attr">ФИО:</span> '.xml_escape($self->member_cn).'<br>';
-  $r .= '<span class="info-attr">Группа почтового справочника:</span> &laquo;'.xml_escape($self->flatgroup_name).'&raquo;.';
+  my $r = '<b>DN:</b> '.xml_escape(unescape_dn_value_full($self->{dn}));
+  $r .= '<br><b>Удаление</b> учётной записи пользователя <b>из группы почтового справочника.</b>';
+  $r .= '<br><span class="info-attr">ФИО:</span> '.xml_escape($self->member_cn);
+  $r .= '<br><span class="info-attr">Группа почтового справочника:</span> &laquo;'.xml_escape($self->flatgroup_name).'&raquo;.';
 
   return $r;
 }

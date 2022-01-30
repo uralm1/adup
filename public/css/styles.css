@@ -42,6 +42,7 @@ html {
 
 .change-infoblock {
   white-space:pre-wrap;
+  padding-bottom:4px;
 }
 
 .approve-userblock {

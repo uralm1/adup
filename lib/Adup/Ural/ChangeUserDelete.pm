@@ -37,16 +37,16 @@ sub type_robotic {
 sub info_human {
   my $self = shift;
 
-  my $r = '<b>DN:</b> '.xml_escape(unescape_dn_value_full($self->{dn})).'<br>';
+  my $r = '<b>DN:</b> '.xml_escape(unescape_dn_value_full($self->{dn}));
   if ($self->{disabled}) {
-    $r .= '<b>Перенос ранее отключенной учётной записи пользователя в &laquo;УВОЛЕННЫЕ&raquo;</b><br>';
+    $r .= '<br><b>Перенос ранее отключенной учётной записи пользователя в &laquo;УВОЛЕННЫЕ&raquo;</b>';
   } else {
-    $r .= '<b>Отключение учётной записи пользователя и перенос в &laquo;УВОЛЕННЫЕ&raquo;</b><br>';
+    $r .= '<br><b>Отключение учётной записи пользователя и перенос в &laquo;УВОЛЕННЫЕ&raquo;</b>';
   }
-  $r .= '<span class="info-attr">ФИО:</span> &laquo;'.xml_escape($self->{cn}).'&raquo;<br>';
-  $r .= '<span class="info-attr">Логин:</span> '.xml_escape($self->{login}).'<br>' if $self->{login};
+  $r .= '<br><span class="info-attr">ФИО:</span> &laquo;'.xml_escape($self->{cn}).'&raquo;';
+  $r .= '<br><span class="info-attr">Логин:</span> '.xml_escape($self->{login}) if $self->{login};
   if ($self->{email}) {
-    $r .= '<span class="info-attr">Имеется Email:</span> '.xml_escape($self->{email}).'<br>' ;
+    $r .= '<br><span class="info-attr">Имеется Email:</span> '.xml_escape($self->{email}) ;
     $r .= '<div class="info-note">Вручную зачистите почтовый ящик и интернет доступ пользователя (если имеется).</div>';
   }
   $r .= '<div class="info-warn"><b>Зависимости!</b> Примените все изменения удаления пользователей из групп почтового справочника перед утверждением изменения.</div>';

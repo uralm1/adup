@@ -34,9 +34,9 @@ sub type_robotic {
 sub info_human {
   my $self = shift;
 
-  my $r = '<b>DN:</b> '.xml_escape(unescape_dn_value_full($self->{dn})).'<br>';
-  $r .= '<b>Создание</b> подразделения '.xml_escape($self->{level}).'-го уровня иерархии.';
-  $r .= '<br><span class="info-attr">Наименование:</span> &laquo;'.xml_escape($self->{dept_name}).'&raquo;<br>';
+  my $r = '<b>DN:</b> '.xml_escape(unescape_dn_value_full($self->{dn}));
+  $r .= '<br><b>Создание</b> подразделения '.xml_escape($self->{level}).'-го уровня иерархии.';
+  $r .= '<br><span class="info-attr">Наименование:</span> &laquo;'.xml_escape($self->{dept_name}).'&raquo;';
   $r .= '<div class="info-warn"><b>Зависимости!</b> Примените все изменения подразделений более верхнего уровня иерархии перед утверждением данного изменения.</div>' if $self->{level} > 0;
 
   return $r;

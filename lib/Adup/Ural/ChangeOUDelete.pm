@@ -33,11 +33,11 @@ sub type_robotic {
 sub info_human {
   my $self = shift;
 
-  my $r = '<b>DN:</b> '.xml_escape(unescape_dn_value_full($self->{dn})).'<br>';
-  $r .= '<b>Удаление неактуального подразделения';
+  my $r = '<b>DN:</b> '.xml_escape(unescape_dn_value_full($self->{dn}));
+  $r .= '<br><b>Удаление неактуального подразделения';
   $r .= (defined $self->{level}) ? ' '.xml_escape($self->{level}).'-го уровня иерархии.' : '.';
   $r .= '</b>';
-  $r .= '<br><span class="info-attr">Наименование:</span> &laquo;'.xml_escape($self->{name}).'&raquo;<br>';
+  $r .= '<br><span class="info-attr">Наименование:</span> &laquo;'.xml_escape($self->{name}).'&raquo;';
   $r .= '<div class="info-warn"><b>Зависимости!</b> Примените все изменения пользователей и изменения подразделений более низкого уровня иерархии перед утверждением данного изменения.</div>';
   $r .= '<div class="info-warn"><b>Внимание!</b> Убедитесь, что в удаляемом подразделении отсутствуют учётные записи пользователей и другие вложенные подразделения. В противном случае применение изменения завершится с ошибкой.</div>';
 

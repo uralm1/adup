@@ -33,9 +33,9 @@ sub type_robotic {
 sub info_human {
   my $self = shift;
 
-  my $r = '<b>DN:</b> '.xml_escape(unescape_dn_value_full($self->{dn})).'<br>';
-  $r .= '<b>Изменение</b> группы почтового справочника корпоративной почты.';
-  $r .= '<br><span class="info-attr">Подразделение:</span> &laquo;'.xml_escape($self->{old_dept_name}).'&raquo; заменяется на &laquo;'.xml_escape($self->{dept_name}).'&raquo;<br>';
+  my $r = '<b>DN:</b> '.xml_escape(unescape_dn_value_full($self->{dn}));
+  $r .= '<br><b>Изменение</b> группы почтового справочника корпоративной почты.';
+  $r .= '<br><span class="info-attr">Подразделение:</span> &laquo;'.xml_escape($self->{old_dept_name}).'&raquo; заменяется на &laquo;'.xml_escape($self->{dept_name}).'&raquo;';
 
   return $r;
 }

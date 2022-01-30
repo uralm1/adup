@@ -36,13 +36,13 @@ sub type_robotic {
 sub info_human {
   my $self = shift;
 
-  my $r = '<span class="info-error">ОБНАРУЖЕНА АКТИВНАЯ АРХИВНАЯ УЧЁТНАЯ ЗАПИСЬ УВОЛЕННОГО СОТРУДНИКА!</span><br>';
-  $r .= '<b>DN:</b> '.xml_escape(unescape_dn_value_full($self->{dn})).'<br>';
-  $r .= '<b>Отключение включенной архивной учётной записи пользователя в &laquo;УВОЛЕННЫХ&raquo;</b><br>';
-  $r .= '<span class="info-attr">ФИО:</span> &laquo;'.xml_escape($self->{cn}).'&raquo;<br>';
-  $r .= '<span class="info-attr">Логин:</span> '.xml_escape($self->{login}).'<br>' if $self->{login};
+  my $r = '<span class="info-error">ОБНАРУЖЕНА АКТИВНАЯ АРХИВНАЯ УЧЁТНАЯ ЗАПИСЬ УВОЛЕННОГО СОТРУДНИКА!</span>';
+  $r .= '<br><b>DN:</b> '.xml_escape(unescape_dn_value_full($self->{dn}));
+  $r .= '<br><b>Отключение включенной архивной учётной записи пользователя в &laquo;УВОЛЕННЫХ&raquo;</b>';
+  $r .= '<br><span class="info-attr">ФИО:</span> &laquo;'.xml_escape($self->{cn}).'&raquo;';
+  $r .= '<br><span class="info-attr">Логин:</span> '.xml_escape($self->{login}) if $self->{login};
   if ($self->{email}) {
-    $r .= '<span class="info-attr">Указан Email:</span> '.xml_escape($self->{email}).'<br>' ;
+    $r .= '<br><span class="info-attr">Указан Email:</span> '.xml_escape($self->{email});
     $r .= '<div class="info-note">Вручную проверьте, возможно всё ещё открыт почтовый ящик и интернет доступ пользователя.</div>';
   }
   $r .= '<div class="info-warn"><b>Внимание!</b> Применение изменения вызовет прекращение доступа пользователя.</div>' unless $self->{disabled};

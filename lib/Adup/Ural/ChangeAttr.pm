@@ -33,23 +33,22 @@ sub type_robotic {
 
 sub info_human {
   my $self = shift;
-  my $r = '<b>DN:</b> '.xml_escape(unescape_dn_value_full($self->{dn})).'<br>';
+  my $r = '<b>DN:</b> '.xml_escape(unescape_dn_value_full($self->{dn}));
   my $title_pre;
   for (sort keys %{$self->{attrs}}) {
     unless ($title_pre) {
-      $r .= '<b>Изменяемые аттрибуты:</b><br>';
+      $r .= '<br><b>Изменяемые аттрибуты:</b>';
       $title_pre = 1;
     }
-    $r .= '<span class="info-attr">'.translate($_).':</span> ';
+    $r .= '<br><span class="info-attr">'.translate($_).':</span> ';
     if (my $old = $self->attr_old($_)) {
       $r .= 'значение &laquo;'.xml_escape($old).'&raquo; заменяется на &laquo;'.xml_escape($self->attr_new($_)).'&raquo;;';
     } else {
       $r .= 'устанавливается &laquo;'.xml_escape($self->attr_new($_)).'&raquo;;';
     }
-    $r .= '<br>';
   }
   if ($self->{flatgroup}) {
-    $r .= '<b>Пользователь добавляется в группу почтового справочника:</b> &laquo;'.xml_escape($self->{flatgroup}{name}).'&raquo;.';
+    $r .= '<br><b>Пользователь добавляется в группу почтового справочника:</b> &laquo;'.xml_escape($self->{flatgroup}{name}).'&raquo;.';
     $r .= '<div class="info-warn"><b>Зависимости!</b> Примените все изменения подразделений перед утверждением изменения.</div>';
   }
   return $r;
