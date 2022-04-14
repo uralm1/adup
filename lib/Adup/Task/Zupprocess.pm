@@ -54,18 +54,19 @@ sub _load_zup {
   };
   if ($@) {
     local $_ = $@;
+    chomp;
     my $msg;
     if (/^org not found/i) { $msg = 'Ошибка: запрошенная организация отсутствует в 1С' }
-    elsif (/^response/i) { $msg = 'Произошла ошибка веб-запроса к серверу 1С' }
-    elsif (/^json response/i) { $msg = 'Произошла ошибка разбора формата данных, полученных с сервера 1C' }
+    elsif (/^response/i) { $msg = "Произошла ошибка веб-запроса к серверу 1С: $_" }
+    elsif (/^json response/i) { $msg = "Произошла ошибка разбора формата данных, полученных с сервера 1C: $_" }
     elsif (/^database tables cleanup/i) { $msg = 'Произошла ошибка очистки таблиц данных' }
     elsif (/^database insert to table persons/i) { $msg = 'Произошла ошибка записи таблицы persons, операция прервана' }
     elsif (/^database update/i) { $msg = 'Произошла ошибка обновления дубликатов в таблице persons, операция прервана' }
     elsif (/^database insert to table depts/i) { $msg = 'Произошла ошибка записи таблицы подразделений' }
     elsif (/^database insert to table flatdepts/i) { $msg = 'Произошла ошибка записи подразделений в плоском формате' }
-    else { $msg = "Произошла ошибка: $@" }
+    else { $msg = "Произошла ошибка: $_" }
     $dblog->l(state => 1, info => $msg);
-    return $job->fail($@);
+    return $job->fail($_);
   }
 
   $loader = undef;

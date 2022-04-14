@@ -5,8 +5,9 @@ use Carp;
 use Mojo::UserAgent;
 use Mojo::URL;
 use Mojo::mysql;
+use Mojo::Util qw(url_unescape);
 use POSIX qw(ceil strftime);
-use Encode qw(encode_utf8);
+use Encode qw(encode_utf8 decode_utf8);
 use Digest::SHA qw(sha1_hex);
 #use Data::Dumper;
 
@@ -455,14 +456,17 @@ sub read_url {
 
   # tx->result dies on connection errors
   my $res = $self->get_ua->get(_fix_pluses_in_url($url) => {Accept => 'application/json'})->result;
+  my $url_safe = $url->to_string;
+  $url_safe =~ s/\?.*$//;
+  my $url_decoded = decode_utf8(url_unescape($url_safe));
   if (!$res->is_success) {
-    die 'Response error '.$res->code.' '.$res->message.", url: $url\n" if $res->is_error;
-    die 'Response unsuccessful '.$res->code.", url: $url\n";
+    die 'Response error '.$res->code.' '.$res->message.", url: $url_decoded\n" if $res->is_error;
+    die 'Response unsuccessful '.$res->code.", url: $url_decoded\n";
   }
   say $res->body if $print_body;
 
   my $v = $res->json;
-  die "Json response error, url: $url\n" unless $v;
+  die "Json response error, url: $url_decoded\n" unless $v;
 
   return $v->{value};
 }

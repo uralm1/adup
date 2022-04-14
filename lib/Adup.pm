@@ -8,7 +8,7 @@ use Adup::Command::smbload;
 use Adup::Command::zupload;
 use Adup::Command::cron;
 
-our $VERSION = '1.21';
+our $VERSION = '1.22';
 
 # This method will run once at server start
 sub startup {
