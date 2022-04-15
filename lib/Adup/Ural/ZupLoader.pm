@@ -183,6 +183,8 @@ sub process_data {
     $self->get_db->query("TRUNCATE persons");
     $self->get_db->query("TRUNCATE depts");
     $self->get_db->query("TRUNCATE flatdepts");
+    $self->get_db->query("TRUNCATE _fio_dedup");
+    $self->get_db->query("TRUNCATE _fio_otd_dedup");
   };
   die "Database tables cleanup error\n" unless defined $e;
 
@@ -203,8 +205,6 @@ sub process_data {
   #
 
   my $loaded_cnt = 0;
-  my %fio_dedup_h;
-  my %fio_otd_dedup_h;
   my %flatdept_dedup_h;
   my $flatdept_id_gen_val = 1;
 
@@ -249,21 +249,6 @@ sub process_data {
     }
     $fio = join(' ', grep $_, $fio_f, $fio_i, $fio_o);
 
-    # fio dedup (and then dedup by fio+otdel)
-    if (exists $fio_dedup_h{$fio}) {
-      # fio+otdel
-      my $fio_otd = join('', $fio, $otdel);
-      if (exists $fio_otd_dedup_h{$fio_otd}) {
-        #$fio_otd_dedup_h{$fio_otd} = 1; # not needed
-        $fio_dedup_h{$fio} = 2;
-      } else {
-        $fio_otd_dedup_h{$fio_otd} = 0;
-        $fio_dedup_h{$fio} = 1;
-      }
-    } else {
-      $fio_dedup_h{$fio} = 0;
-    }
-
     # flatdept dedup
     $flatdept_dedup_h{$otdel} = $flatdept_id_gen_val++ unless exists $flatdept_dedup_h{$otdel};
 
@@ -272,7 +257,7 @@ sub process_data {
         VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         $id,
         $fio,
-        0, # will update later
+        0, # must be 0, some will update later
         $fio_f, $fio_i, $fio_o,
         $_pod->{$pod_key}{_id},
         $flatdept_dedup_h{$otdel},
@@ -298,14 +283,31 @@ sub process_data {
   ### 3.update duplicates ###
   #
   $self->progress(90, '90% Запись информации о дубликатах');
-  while (my ($fio, $v) = each %fio_dedup_h) {
-    if ($v > 0) {
-      $e = eval {
-        $self->get_db->query("UPDATE persons SET dup = ? WHERE fio = ?", $v, $fio);
-      };
-      die "Database update duplicates in table persons error" unless defined $e;
-    }
-  }
+
+  $e = eval {
+    $self->get_db->query("INSERT INTO _fio_dedup (fio) \
+      SELECT fio FROM persons GROUP BY fio HAVING COUNT(*) > 1");
+  };
+  die "Database calculation fio duplicates error" unless defined $e;
+
+  $e = eval {
+    $self->get_db->query("INSERT INTO _fio_otd_dedup (fio, otdel) \
+      SELECT fio, otdel FROM persons GROUP BY fio, otdel HAVING COUNT(*) > 1");
+  };
+  die "Database calculation fio,otdel duplicates error" unless defined $e;
+
+  $e = eval {
+    $self->get_db->query("UPDATE persons SET dup = 1 \
+      WHERE fio IN (SELECT fio FROM _fio_dedup)");
+  };
+  die "Database update duplicates (1) in table persons error" unless defined $e;
+
+  $e = eval {
+    $self->get_db->query("UPDATE persons SET dup = 2 \
+      WHERE (fio, otdel) IN (SELECT fio, otdel FROM _fio_otd_dedup)");
+  };
+  die "Database update duplicates (2) in table persons error" unless defined $e;
+
   $self->get_log->info("Persons duplicates processed.");
   #
   ### done ###

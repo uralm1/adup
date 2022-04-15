@@ -211,3 +211,19 @@ INSERT INTO `state` (`key`, `value`) VALUES
 ('zupprocess_id', 0),
 ('sync_id', 0);
 
+-- 7 up
+ALTER TABLE `persons` ADD INDEX (`otdel`);
+
+CREATE TABLE IF NOT EXISTS `_fio_dedup` (
+  `fio` varchar(150) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `_fio_otd_dedup` (
+  `fio` varchar(150) NOT NULL,
+  `otdel` varchar(255) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- 7 down
+DROP TABLE IF EXISTS `_fio_dedup`;
+DROP TABLE IF EXISTS `_fio_otd_dedup`;
+

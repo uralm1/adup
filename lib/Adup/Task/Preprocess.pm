@@ -48,6 +48,8 @@ sub _process_dbf {
     $db_adup->query("DELETE FROM persons");
     $db_adup->query("DELETE FROM depts");
     $db_adup->query("DELETE FROM flatdepts");
+    $db_adup->query("TRUNCATE _fio_dedup");
+    $db_adup->query("TRUNCATE _fio_otd_dedup");
   };
   unless (defined $e) {
     return $job->fail('Tables cleanup error');
@@ -56,8 +58,6 @@ sub _process_dbf {
   my $loaded_cnt = 0;
   my %path_id_h;
   my %id_dept_h;
-  my %fio_dedup_h;
-  my %fio_otd_dedup_h;
   my $id_gen_val = 1;
   my %flatdept_dedup_h;
   my $flatdept_id_gen_val = 1;
@@ -95,21 +95,6 @@ sub _process_dbf {
 
       $otdel = decode('cp866', $otdel);
 
-      # fio dedup (and then dedup by fio+otdel)
-      if (exists $fio_dedup_h{$fio}) {
-        # fio+otdel
-        my $fio_otd = join('', $fio, $otdel);
-        if (exists $fio_otd_dedup_h{$fio_otd}) {
-          #$fio_otd_dedup_h{$fio_otd} = 1; # not needed
-          $fio_dedup_h{$fio} = 2;
-        } else {
-          $fio_otd_dedup_h{$fio_otd} = 0;
-          $fio_dedup_h{$fio} = 1;
-        }
-      } else {
-        $fio_dedup_h{$fio} = 0;
-      }
-
       # flatdept dedup
       unless (exists $flatdept_dedup_h{$otdel}) {
         $flatdept_dedup_h{$otdel} = $flatdept_id_gen_val;
@@ -124,7 +109,7 @@ sub _process_dbf {
           VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
           $id,
           $fio,
-          0, #1.7 will update later
+          0, #v1.7 must be 0, some will update later
           $fio_f, $fio_i, $fio_o,
           $path_id_h{$otdel},
           $flatdept_dedup_h{$otdel},
@@ -156,17 +141,31 @@ sub _process_dbf {
   #
   ### 2.update duplicates ###
   #
-  while (my ($fio, $v) = each %fio_dedup_h) {
-    if ($v > 0) {
-      $e = eval {
-        $db_adup->query("UPDATE persons SET dup = ? WHERE fio = ?", $v, $fio);
-      };
-      unless (defined $e) {
-        $log->l(state => 1, info => "Произошла ошибка обновления дубликатов в таблице persons, $loaded_cnt сотрудников обработано");
-        return $job->fail('Mysql update dublicates in table persons error');
-      }
-    }
+
+  $e = eval {
+    $db_adup->query("INSERT INTO _fio_dedup (fio) \
+      SELECT fio FROM persons GROUP BY fio HAVING COUNT(*) > 1");
+
+    $db_adup->query("INSERT INTO _fio_otd_dedup (fio, otdel) \
+      SELECT fio, otdel FROM persons GROUP BY fio, otdel HAVING COUNT(*) > 1");
+  };
+  unless (defined $e) {
+    $log->l(state => 1, info => "Произошла ошибка расчета дубликатов в таблице persons, $loaded_cnt сотрудников обработано");
+    return $job->fail('Mysql duplicates calculation in table persons error');
   }
+
+  $e = eval {
+    $db_adup->query("UPDATE persons SET dup = 1 \
+      WHERE fio IN (SELECT fio FROM _fio_dedup)");
+
+    $db_adup->query("UPDATE persons SET dup = 2 \
+      WHERE (fio, otdel) IN (SELECT fio, otdel FROM _fio_otd_dedup)");
+  };
+  unless (defined $e) {
+    $log->l(state => 1, info => "Произошла ошибка обновления дубликатов в таблице persons, $loaded_cnt сотрудников обработано");
+    return $job->fail('Mysql update dublicates in table persons error');
+  }
+
   #
   ### done ###
   #

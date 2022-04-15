@@ -61,7 +61,8 @@ sub _load_zup {
     elsif (/^json response/i) { $msg = "Произошла ошибка разбора формата данных, полученных с сервера 1C: $_" }
     elsif (/^database tables cleanup/i) { $msg = 'Произошла ошибка очистки таблиц данных' }
     elsif (/^database insert to table persons/i) { $msg = 'Произошла ошибка записи таблицы persons, операция прервана' }
-    elsif (/^database update/i) { $msg = 'Произошла ошибка обновления дубликатов в таблице persons, операция прервана' }
+    elsif (/^database calculation/i) { $msg = "Произошла ошибка расчета дубликатов в таблице persons, операция прервана: $_" }
+    elsif (/^database update/i) { $msg = "Произошла ошибка обновления дубликатов в таблице persons, операция прервана: $_" }
     elsif (/^database insert to table depts/i) { $msg = 'Произошла ошибка записи таблицы подразделений' }
     elsif (/^database insert to table flatdepts/i) { $msg = 'Произошла ошибка записи подразделений в плоском формате' }
     else { $msg = "Произошла ошибка: $_" }
