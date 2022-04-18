@@ -112,11 +112,12 @@ sub _process_dbf {
       process_dept_a(\%path_id_h, \%id_dept_h, \$id_gen_val, split(/\\/, $otdel));
 
       $e = eval {
-        $db_adup->query("INSERT INTO persons (gal_id, fio, dup, f, i, o, dept_id, flatdept_id, otdel, dolj, tabn) \
-          VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        $db_adup->query("INSERT INTO persons (gal_id, fio, dup, sovm, f, i, o, dept_id, flatdept_id, otdel, dolj, tabn) \
+          VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
           $id,
           $fio,
           0, #v1.7 must be 0, some will update later
+          0, # sovm, not used for galaktika import
           $fio_f, $fio_i, $fio_o,
           $path_id_h{$otdel},
           $flatdept_dedup_h{$otdel},

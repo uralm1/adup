@@ -28,6 +28,7 @@ sub new {
   #$self->{url_base}
   #$self->{org_key}
   #$self->{si}
+  #$self->{sovm_hash}
   #$self->{kis_array}
 
   #timeouts
@@ -125,6 +126,37 @@ sub read_si {
 }
 
 
+# load 'ВидыЗанятости' information register into sovm_hash attribute
+# returns a number of loaded records on success,
+# dies on errors.
+sub read_vzs {
+  my $self = shift;
+  croak 'Org key is not loaded!' unless $self->{org_key};
+
+  my $now = strftime '%Y-%m-%dT%H:%M:%S', localtime;
+
+  # Перечисление.ВидыЗанятости
+  my $vnsovm_zan = 'ВнутреннееСовместительство';
+
+  my $obj = "InformationRegister_ВидыЗанятостиСотрудниковИнтервальный";
+  my $select = 'ДатаОкончания,ДатаНачала,Сотрудник_Key,ФизическоеЛицо_Key,ВидЗанятости,ДействуетДо';
+  my $filter = "ГоловнаяОрганизация_Key eq guid'$self->{org_key}' and ДатаОкончания gt datetime'$now' and ДатаНачала le datetime'$now' and ВидЗанятости eq '$vnsovm_zan'";
+  my $top = undef;
+
+  my $url_vzs = Mojo::URL->new($obj)->to_abs($self->{url_base})->query({'$select'=>$select, '$filter'=>$filter, '$top'=>$top});
+  #say $url_vzs->to_unsafe_string;
+
+  my $vzs_array = $self->read_url($url_vzs);
+  my $sovm_hash = {};
+  $sovm_hash->{$_->{'Сотрудник_Key'}} = $_->{'ФизическоеЛицо_Key'} for @$vzs_array;
+  $self->{sovm_hash} = $sovm_hash;
+
+  my $cnt = scalar @{$vzs_array};
+  $self->get_log->info("Loaded [$obj], $cnt records.");
+  return $cnt;
+}
+
+
 # load main information register into kis_array attribute
 # returns a number of loaded records on success,
 # dies on errors.
@@ -166,6 +198,7 @@ sub upload_data {
   $self->progress(5, '5% Загрузка справочников');
   $self->read_si($_) for keys %{$self->{si}};
   $self->progress(10, '10% Загрузка данных сотрудников');
+  $self->read_vzs;
   $self->read_kis;
   return 1;
 }
@@ -193,6 +226,7 @@ sub process_data {
   my $_fl = $self->{si}{'ФизическиеЛица'}{hash};
   my $_dl = $self->{si}{'Должности'}{hash};
   my $_pod = $self->{si}{'ПодразделенияОрганизаций'}{hash};
+  my $_sovm = $self->{sovm_hash};
 
   my $dept_id_gen_val = 1;
 
@@ -257,12 +291,16 @@ sub process_data {
     # flatdept dedup
     $flatdept_dedup_h{$otdel} = $flatdept_id_gen_val++ unless exists $flatdept_dedup_h{$otdel};
 
+    # sovm
+    my $sovm = exists $_sovm->{$sot_key} && $_sovm->{$sot_key} eq $fl_key ? 1 : 0;
+
     $e = eval {
-      $self->get_db->query("INSERT INTO persons (gal_id, fio, dup, f, i, o, dept_id, flatdept_id, otdel, dolj, tabn) \
-        VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      $self->get_db->query("INSERT INTO persons (gal_id, fio, dup, sovm, f, i, o, dept_id, flatdept_id, otdel, dolj, tabn) \
+        VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         $id,
         $fio,
         0, # must be 0, some will update later
+        $sovm,
         $fio_f, $fio_i, $fio_o,
         $_pod->{$pod_key}{_id},
         $flatdept_dedup_h{$otdel},

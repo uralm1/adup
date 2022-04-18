@@ -227,3 +227,8 @@ CREATE TABLE IF NOT EXISTS `_fio_otd_dedup` (
 DROP TABLE IF EXISTS `_fio_dedup`;
 DROP TABLE IF EXISTS `_fio_otd_dedup`;
 
+-- 8 up
+ALTER TABLE `persons` ADD `sovm` TINYINT(3) UNSIGNED NOT NULL AFTER `dup`;
+
+-- 8 down
+
