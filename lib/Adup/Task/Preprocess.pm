@@ -76,6 +76,9 @@ sub _process_dbf {
       # split fio
       $fio = decode('cp866', $fio);
 
+      # fix ё in fio
+      _fix_eE($fio);
+
       my ($fio_f, $fio_i, $fio_o);
       if ($fio =~ m/^\s*(\S+)\s*(\S*)\s*\b(.*)\b\s*$/) { # we have to do it to reset $N vars
         $fio_f = "\u\L$1";
@@ -94,6 +97,10 @@ sub _process_dbf {
       $tabn = 0 unless defined $tabn;
 
       $otdel = decode('cp866', $otdel);
+
+      # fix ё in otdel, dolj
+      _fix_eE($otdel);
+      _fix_eE($dolj);
 
       # flatdept dedup
       unless (exists $flatdept_dedup_h{$otdel}) {
@@ -262,6 +269,12 @@ sub process_dept_a {
     }
     $level++; # go to next level
   }
+}
+
+
+# internal
+sub _fix_eE {
+  $_[0] =~ tr/ёЁ/еЕ/;
 }
 
 

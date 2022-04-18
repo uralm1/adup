@@ -236,6 +236,11 @@ sub process_data {
     my $otdel_hierarhy = _unwind_hierarhy($pod_key, $_pod); # this also mark depts as used
     my $otdel = join('\\', @$otdel_hierarhy) // '';
 
+    # fix ё in fio, dolj, otdel
+    _fix_eE($fio);
+    _fix_eE($dolj);
+    _fix_eE($otdel);
+
     # split fio
     my ($fio_f, $fio_i, $fio_o);
     if ($fio =~ m/^\s*(\S+)\s*(\S*)\s*\b(.*)\b\s*$/) { # we have to do it to reset $N vars
@@ -333,11 +338,16 @@ sub process_data {
         $level++;
       } until _zero_key($pk);
     }
+
+    # fix ё in departments names
+    my $dept_name = $_->{Description};
+    _fix_eE($dept_name);
+
     $e = eval {
       $self->get_db->query("INSERT INTO depts (id, name, level, parent) \
         VALUES(?, ?, ?, ?)",
         $_->{_id},
-        $_->{Description},
+        $dept_name,
         $level,
         $parent
       );
@@ -504,6 +514,12 @@ sub _fix_pluses_in_url {
   my $u = $url->to_unsafe_string;
   $u =~ s/\+/%20/g;
   return $u;
+}
+
+
+# internal, not a method
+sub _fix_eE {
+  $_[0] =~ tr/ёЁ/еЕ/;
 }
 
 

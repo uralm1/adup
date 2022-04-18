@@ -30,10 +30,12 @@ my $db_adup = $mysql_adup->db;
   my $dbf = eval { new XBase($cfg->{galdb_temporary_file}); };
 
   if (defined $dbf) {
-    my $e = eval { 
+    my $e = eval {
       $db_adup->query("DELETE FROM persons");
       $db_adup->query("DELETE FROM depts");
       $db_adup->query("DELETE FROM flatdepts");
+      $db_adup->query("TRUNCATE _fio_dedup");
+      $db_adup->query("TRUNCATE _fio_otd_dedup");
     };
     unless (defined $e) {
       _setstate($db_adup, 0);
@@ -43,8 +45,6 @@ my $db_adup = $mysql_adup->db;
     my $loaded_cnt = 0;
     my %path_id_h;
     my %id_dept_h;
-    my %fio_dedup_h;
-    my %fio_otd_dedup_h;
     my $id_gen_val = 1;
     my %flatdept_dedup_h;
     my $flatdept_id_gen_val = 1;
@@ -57,11 +57,14 @@ my $db_adup = $mysql_adup->db;
     ### 1.begin of persons loop ###
     #
     for (0 .. $last_record) {
-      my ($deleted, $id, $fio, $otdel, $dolj, $tabn) = 
+      my ($deleted, $id, $fio, $otdel, $dolj, $tabn) =
         $dbf->get_record($_, 'ID', 'FIO', 'OTDEL', 'DOLJ', 'TABN');
       unless ($deleted) {
 	# split fio
 	$fio = decode('cp866', $fio);
+
+        # fix ё in fio
+        _fix_eE($fio);
 
 	my ($fio_f, $fio_i, $fio_o);
         if ($fio =~ m/^\s*(\S+)\s*(\S*)\s*\b(.*)\b\s*$/) { # we have to do it to reset $N vars
@@ -82,20 +85,9 @@ my $db_adup = $mysql_adup->db;
 
 	$otdel = decode('cp866', $otdel);
 
-	# fio dedup (and then dedup by fio+otdel)
-	if (exists $fio_dedup_h{$fio}) {
-	  # fio+otdel
-	  my $fio_otd = join('', $fio, $otdel);
-	  if (exists $fio_otd_dedup_h{$fio_otd}) {
-	    #$fio_otd_dedup_h{$fio_otd} = 1; # not needed
-	    $fio_dedup_h{$fio} = 2;
-	  } else {
-	    $fio_otd_dedup_h{$fio_otd} = 0;
-	    $fio_dedup_h{$fio} = 1;
-	  }
-	} else {
-	  $fio_dedup_h{$fio} = 0;
-	}
+        # fix ё in otdel, dolj
+        _fix_eE($otdel);
+        _fix_eE($dolj);
 
 	# flatdept dedup
 	unless (exists $flatdept_dedup_h{$otdel}) {
@@ -109,7 +101,7 @@ my $db_adup = $mysql_adup->db;
 	$e = eval {
 	  $db_adup->query("INSERT INTO persons (gal_id, fio, dup, f, i, o, dept_id, flatdept_id, otdel, dolj, tabn) \
 	    VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-	    $id, 
+	    $id,
 	    $fio,
 	    0, #1.7 will update later
 	    $fio_f, $fio_i, $fio_o,
@@ -140,18 +132,32 @@ my $db_adup = $mysql_adup->db;
     #
     ### 2.update duplicates ###
     #
-    for my $fio (keys %fio_dedup_h) {
-      if ($fio_dedup_h{$fio} > 0) {
-	$e = eval { 
- 	  $db_adup->query("UPDATE persons SET dup = ? WHERE fio = ?", $fio_dedup_h{$fio}, $fio);
- 	};
- 	unless (defined $e) {
-          $log->l(state => 1, info => "Произошла ошибка обновления дубликатов в таблице persons, $loaded_cnt сотрудников обработано");
-	  _setstate($db_adup, 0);
- 	  die('Mysql update dublicates in table persons error');
- 	}
-      }
+    $e = eval {
+      $db_adup->query("INSERT INTO _fio_dedup (fio) \
+        SELECT fio FROM persons GROUP BY fio HAVING COUNT(*) > 1");
+
+      $db_adup->query("INSERT INTO _fio_otd_dedup (fio, otdel) \
+        SELECT fio, otdel FROM persons GROUP BY fio, otdel HAVING COUNT(*) > 1");
+    };
+    unless (defined $e) {
+      $log->l(state => 1, info => "Произошла ошибка расчета дубликатов в таблице persons, $loaded_cnt сотрудников обработано");
+      _setstate($db_adup, 0);
+      die('Mysql duplicates calculation in table persons error');
     }
+
+    $e = eval {
+      $db_adup->query("UPDATE persons SET dup = 1 \
+        WHERE fio IN (SELECT fio FROM _fio_dedup)");
+
+      $db_adup->query("UPDATE persons SET dup = 2 \
+        WHERE (fio, otdel) IN (SELECT fio, otdel FROM _fio_otd_dedup)");
+    };
+    unless (defined $e) {
+      $log->l(state => 1, info => "Произошла ошибка обновления дубликатов в таблице persons, $loaded_cnt сотрудников обработано");
+      _setstate($db_adup, 0);
+      die('Mysql update dublicates in table persons error');
+    }
+
     #
     ### done ###
     #
@@ -165,7 +171,7 @@ my $db_adup = $mysql_adup->db;
       $e = eval {
 	$db_adup->query("INSERT INTO depts (id, name, level, parent) \
 	  VALUES(?, ?, ?, ?)",
-	  $_, 
+	  $_,
 	  $id_dept_h{$_}->{name},
 	  $id_dept_h{$_}->{level},
 	  $id_dept_h{$_}->{parent}
@@ -208,7 +214,7 @@ my $db_adup = $mysql_adup->db;
     #
     ### end of saving flat depts hash ###
     #
-    
+
     $log->l(info => "Загружен шаблон с информацией по $loaded_cnt сотрудникам и выполнен разбор оргструктуры по $dept_loaded_cnt/$flatdept_loaded_cnt подразделениям");
 
   } else {
@@ -262,6 +268,12 @@ sub process_dept_a {
     }
     $level++; # go to next level
   }
+}
+
+
+# internal, not a method
+sub _fix_eE {
+  $_[0] =~ tr/ёЁ/еЕ/;
 }
 
 
