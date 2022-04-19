@@ -63,6 +63,7 @@ lib/Adup/Ural/LdapListsUtil.pm
 lib/Adup/Ural/LoginAI.pm
 lib/Adup/Ural/MySQLDateTimeAnalog.pm
 lib/Adup/Ural/OperatorResolver.pm
+lib/Adup/Ural/PersonsDeduplicator.pm
 lib/Adup/Ural/SyncAttributesCreateMoveUsers.pm
 lib/Adup/Ural/SyncCreateFlatGroups.pm
 lib/Adup/Ural/SyncCreateOUs.pm

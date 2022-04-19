@@ -37,7 +37,7 @@ sub do_sync {
   #
   my $res;
   my $e = eval {
-    $res = $args{db}->query("SELECT fio, dup, f, i, o, dolj, otdel, tabn, dept_id, \
+    $res = $args{db}->query("SELECT fio, dup, sovm, f, i, o, dolj, otdel, tabn, dept_id, \
 depts.name AS dept, \
 flatdepts.cn AS flatdept_cn, flatdepts.name AS flatdept_name  \
 FROM persons \
@@ -85,6 +85,7 @@ ORDER BY persons.id ASC");
 
 
     my $dup = $next->{dup};
+    my $sovm = $next->{sovm};
     if ($dup == 0 || $dup == 1) {
       my $r;
       if ($dup == 0) {
@@ -222,8 +223,13 @@ ORDER BY persons.id ASC");
 
     } else {
       # **duplicates in one department**
-      $args{log}->l(state=>11, info => "Дублирующееся ФИО: $next->{fio} пропущено. Внимание! Имеются сотрудники с одинаковыми ФИО в одном подразделении.");
-      #say "Дублирующееся ФИО: $next->{fio} пропущено";
+      if ($sovm == 0) {
+        $args{log}->l(state=>11, info => "Дублирующееся ФИО: $next->{fio} пропущено. Внимание! Имеются сотрудники с одинаковыми ФИО в одном подразделении.");
+        #say "Дублирующееся ФИО: $next->{fio} пропущено";
+      } else {
+        $args{log}->l(state=>11, info => "Сотрудник ФИО: $next->{fio} имеет внутреннее совместительство в том же самом подразделении!");
+        #say "Сотрудник ФИО: $next->{fio} имеет внутреннее совместительство в том же самом подразделении!";
+      }
     }
 
     # update progress

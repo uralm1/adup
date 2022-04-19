@@ -16,6 +16,7 @@ use Mojo::File 'path';
 use lib "../lib";
 use Adup::Ural::Dblog;
 use Adup::Ural::FlatGroupNamingAI qw(flatgroup_ai);
+use Adup::Ural::PersonsDeduplicator qw(deduplicate_persons);
 
 my $cfg = eval path('../test.conf')->slurp;
 my $remote_user = 'test';
@@ -34,8 +35,6 @@ my $db_adup = $mysql_adup->db;
       $db_adup->query("DELETE FROM persons");
       $db_adup->query("DELETE FROM depts");
       $db_adup->query("DELETE FROM flatdepts");
-      $db_adup->query("TRUNCATE _fio_dedup");
-      $db_adup->query("TRUNCATE _fio_otd_dedup");
     };
     unless (defined $e) {
       _setstate($db_adup, 0);
@@ -133,30 +132,15 @@ my $db_adup = $mysql_adup->db;
     #
     ### 2.update duplicates ###
     #
-    $e = eval {
-      $db_adup->query("INSERT INTO _fio_dedup (fio) \
-        SELECT fio FROM persons GROUP BY fio HAVING COUNT(*) > 1");
-
-      $db_adup->query("INSERT INTO _fio_otd_dedup (fio, otdel) \
-        SELECT fio, otdel FROM persons GROUP BY fio, otdel HAVING COUNT(*) > 1");
+    eval {
+      deduplicate_persons($db_adup);
     };
-    unless (defined $e) {
-      $log->l(state => 1, info => "Произошла ошибка расчета дубликатов в таблице persons, $loaded_cnt сотрудников обработано");
+    if ($@) {
+      local $_ = $@;
+      chomp;
+      $log->l(state => 1, info => "Произошла ошибка дедубликации: $_");
       _setstate($db_adup, 0);
-      die('Mysql duplicates calculation in table persons error');
-    }
-
-    $e = eval {
-      $db_adup->query("UPDATE persons SET dup = 1 \
-        WHERE fio IN (SELECT fio FROM _fio_dedup)");
-
-      $db_adup->query("UPDATE persons SET dup = 2 \
-        WHERE (fio, otdel) IN (SELECT fio, otdel FROM _fio_otd_dedup)");
-    };
-    unless (defined $e) {
-      $log->l(state => 1, info => "Произошла ошибка обновления дубликатов в таблице persons, $loaded_cnt сотрудников обработано");
-      _setstate($db_adup, 0);
-      die('Mysql update dublicates in table persons error');
+      die $_;
     }
 
     #

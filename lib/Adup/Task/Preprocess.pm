@@ -11,6 +11,7 @@ use Digest::SHA qw(sha1_hex);
 
 use Adup::Ural::Dblog;
 use Adup::Ural::FlatGroupNamingAI qw(flatgroup_ai);
+use Adup::Ural::PersonsDeduplicator qw(deduplicate_persons);
 
 # $TASK_LOG_STATE_SUCCESS = 0;
 # $TASK_LOG_STATE_ERROR = 1;
@@ -48,8 +49,6 @@ sub _process_dbf {
     $db_adup->query("DELETE FROM persons");
     $db_adup->query("DELETE FROM depts");
     $db_adup->query("DELETE FROM flatdepts");
-    $db_adup->query("TRUNCATE _fio_dedup");
-    $db_adup->query("TRUNCATE _fio_otd_dedup");
   };
   unless (defined $e) {
     return $job->fail('Tables cleanup error');
@@ -149,29 +148,14 @@ sub _process_dbf {
   #
   ### 2.update duplicates ###
   #
-
-  $e = eval {
-    $db_adup->query("INSERT INTO _fio_dedup (fio) \
-      SELECT fio FROM persons GROUP BY fio HAVING COUNT(*) > 1");
-
-    $db_adup->query("INSERT INTO _fio_otd_dedup (fio, otdel) \
-      SELECT fio, otdel FROM persons GROUP BY fio, otdel HAVING COUNT(*) > 1");
+  eval {
+    deduplicate_persons($db_adup);
   };
-  unless (defined $e) {
-    $log->l(state => 1, info => "Произошла ошибка расчета дубликатов в таблице persons, $loaded_cnt сотрудников обработано");
-    return $job->fail('Mysql duplicates calculation in table persons error');
-  }
-
-  $e = eval {
-    $db_adup->query("UPDATE persons SET dup = 1 \
-      WHERE fio IN (SELECT fio FROM _fio_dedup)");
-
-    $db_adup->query("UPDATE persons SET dup = 2 \
-      WHERE (fio, otdel) IN (SELECT fio, otdel FROM _fio_otd_dedup)");
-  };
-  unless (defined $e) {
-    $log->l(state => 1, info => "Произошла ошибка обновления дубликатов в таблице persons, $loaded_cnt сотрудников обработано");
-    return $job->fail('Mysql update dublicates in table persons error');
+  if ($@) {
+    local $_ = $@;
+    chomp;
+    $log->l(state => 1, info => "Произошла ошибка дедубликации: $_");
+    return $job->fail($_);
   }
 
   #

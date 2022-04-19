@@ -12,6 +12,7 @@ use Digest::SHA qw(sha1_hex);
 #use Data::Dumper;
 
 use Adup::Ural::FlatGroupNamingAI qw(flatgroup_ai);
+use Adup::Ural::PersonsDeduplicator qw(deduplicate_persons);
 
 # my $obj = Adup::Ural::ZupLoader->new($job->app);
 # dies on error - bad server url
@@ -216,8 +217,6 @@ sub process_data {
     $self->get_db->query("TRUNCATE persons");
     $self->get_db->query("TRUNCATE depts");
     $self->get_db->query("TRUNCATE flatdepts");
-    $self->get_db->query("TRUNCATE _fio_dedup");
-    $self->get_db->query("TRUNCATE _fio_otd_dedup");
   };
   die "Database tables cleanup error\n" unless defined $e;
 
@@ -327,29 +326,7 @@ sub process_data {
   #
   $self->progress(90, '90% Запись информации о дубликатах');
 
-  $e = eval {
-    $self->get_db->query("INSERT INTO _fio_dedup (fio) \
-      SELECT fio FROM persons GROUP BY fio HAVING COUNT(*) > 1");
-  };
-  die "Database calculation fio duplicates error" unless defined $e;
-
-  $e = eval {
-    $self->get_db->query("INSERT INTO _fio_otd_dedup (fio, otdel) \
-      SELECT fio, otdel FROM persons GROUP BY fio, otdel HAVING COUNT(*) > 1");
-  };
-  die "Database calculation fio,otdel duplicates error" unless defined $e;
-
-  $e = eval {
-    $self->get_db->query("UPDATE persons SET dup = 1 \
-      WHERE fio IN (SELECT fio FROM _fio_dedup)");
-  };
-  die "Database update duplicates (1) in table persons error" unless defined $e;
-
-  $e = eval {
-    $self->get_db->query("UPDATE persons SET dup = 2 \
-      WHERE (fio, otdel) IN (SELECT fio, otdel FROM _fio_otd_dedup)");
-  };
-  die "Database update duplicates (2) in table persons error" unless defined $e;
+  deduplicate_persons($self->get_db);
 
   $self->get_log->info("Persons duplicates processed.");
   #
@@ -390,7 +367,7 @@ sub process_data {
         $parent
       );
     };
-    die "Database insert to table depts error" unless defined $e;
+    die "Database insert to table depts error\n" unless defined $e;
     $dept_loaded_cnt++;
   }
   $self->get_log->info("Departments processed, $dept_loaded_cnt.");
@@ -415,7 +392,7 @@ sub process_data {
         flatgroup_ai($mod_otd)
       );
     };
-    die "Database insert to table flatdepts error" unless defined $e;
+    die "Database insert to table flatdepts error\n" unless defined $e;
     $flatdept_loaded_cnt++;
   }
   $self->get_log->info("Flatdepts processed, $flatdept_loaded_cnt.");

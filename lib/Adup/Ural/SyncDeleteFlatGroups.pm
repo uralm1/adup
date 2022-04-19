@@ -33,8 +33,7 @@ sub do_sync {
   my $entries_total;
   my $e = eval {
     my $r = $args{db}->query("SELECT id, cn \
-      FROM flatdepts \
-      ORDER BY id ASC");
+FROM flatdepts ORDER BY id ASC");
     $entries_total = $r->rows;
     while (my $next = $r->hash) {
       $fg_hash{$next->{cn}} = $next->{id};
@@ -56,9 +55,8 @@ sub do_sync {
   my %persons_hash; # cn (fio cut to 64) is a key
   my %dup_persons_hash; # dn is a key
   $e = eval {
-    my $r = $args{db}->query("SELECT fio, dup, dept_id, flatdept_id \
-      FROM persons \
-      ORDER BY id ASC");
+    my $r = $args{db}->query("SELECT fio, dup, sovm, dept_id, flatdept_id \
+FROM persons ORDER BY id ASC");
     while (my $next = $r->hash) {
       my $dup = $next->{dup};
       my $cn = substr($next->{fio}, 0, 64);

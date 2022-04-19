@@ -60,6 +60,7 @@ sub _load_zup {
     elsif (/^response/i) { $msg = "Произошла ошибка веб-запроса к серверу 1С: $_" }
     elsif (/^json response/i) { $msg = "Произошла ошибка разбора формата данных, полученных с сервера 1C: $_" }
     elsif (/^database tables cleanup/i) { $msg = 'Произошла ошибка очистки таблиц данных' }
+    elsif (/^database temporary tables cleanup/i) { $msg = 'Произошла ошибка очистки временных таблиц данных' }
     elsif (/^database insert to table persons/i) { $msg = 'Произошла ошибка записи таблицы persons, операция прервана' }
     elsif (/^database calculation/i) { $msg = "Произошла ошибка расчета дубликатов в таблице persons, операция прервана: $_" }
     elsif (/^database update/i) { $msg = "Произошла ошибка обновления дубликатов в таблице persons, операция прервана: $_" }
