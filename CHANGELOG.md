@@ -2,6 +2,7 @@
 All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
+- Обновление materialize и jquery.
 
 ## [1.23] - 2022-04-19
 - Чтение информации о видах занятости из 1C. Определение сотрудников с внутренним совместительством.
